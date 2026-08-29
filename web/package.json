@@ -15,10 +15,13 @@
     "typecheck": "tsc --noEmit",
     "data:validate": "tsx server/validate.ts",
     "data:rebuild": "tsx server/rebuild-snapshot.ts",
+    "data:products:import": "tsx server/import-products-csv.ts",
     "data:import": "tsx server/import-run.ts",
     "data:publish-status": "tsx server/update-publish-status.ts"
   },
   "dependencies": {
+    "csv-parse": "^6.2.1",
+    "csv-stringify": "^6.8.3",
     "express": "^5.2.1",
     "react": "19.2.6",
     "react-dom": "19.2.6",

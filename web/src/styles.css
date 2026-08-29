@@ -9,7 +9,7 @@ button:disabled { cursor: wait; opacity: .55; }
 .app-shell { min-height: 100vh; }
 .topbar { height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(22px, 5vw, 76px); border-bottom: 1px solid #d8d4ca; background: rgba(246,243,236,.92); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); }
 .brand { display: flex; align-items: center; gap: 12px; font: 500 12px/1 'DM Mono', monospace; letter-spacing: .14em; }
-.brand-mark { width: 34px; height: 34px; display: grid; place-items: center; color: #f6f3ec; background: #26382a; border-radius: 50%; font: 500 17px/1 'DM Mono', monospace; }
+.brand-mark { width: 36px; height: 36px; object-fit: contain; }
 nav { display: flex; gap: 30px; }
 .nav-link { color: #717569; font-size: 14px; padding: 28px 0 25px; border-bottom: 2px solid transparent; }
 .nav-link.active { color: #22271f; border-color: #22271f; }
@@ -34,6 +34,8 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .board-heading > span { color: #717569; font-size: 12px; }
 .freshness { color: #717569; font-size: 12px; }
 .freshness i { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #6d8b63; }
+.board-actions, .csv-links { display: flex; align-items: center; gap: 18px; }
+.csv-link { color: #52634d; font: 500 10px/1.4 'DM Mono', monospace; letter-spacing: .06em; text-decoration: underline; text-underline-offset: 4px; white-space: nowrap; }
 .empty-state { min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-bottom: 1px solid #d8d4ca; }
 .empty-state > p:not(.eyebrow) { max-width: 520px; color: #717569; line-height: 1.7; }
 .empty-orbit { width: 64px; height: 64px; margin-bottom: 22px; border: 1px solid #9aa18f; border-radius: 50%; display: grid; place-items: center; position: relative; }
@@ -79,6 +81,13 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .admin-heading > p:last-child { color: #6d7168; }
 .readonly-banner { margin-top: 28px; padding: 24px; border: 1px solid #d8d4ca; background: #eeeae0; }
 .readonly-banner p { margin-bottom: 0; color: #6d7168; line-height: 1.6; }
+.csv-panel { display: grid; grid-template-columns: 1fr minmax(260px, .55fr); gap: 32px; align-items: end; margin-top: 38px; padding: 28px 30px; border: 1px solid #d8d4ca; background: #eeeae0; }
+.csv-panel h2 { margin: 0; font-size: 24px; }
+.csv-panel p:not(.eyebrow) { max-width: 650px; margin: 10px 0 18px; color: #6d7168; font-size: 12px; line-height: 1.65; }
+.csv-import { display: grid; gap: 12px; }
+.csv-import label { display: grid; gap: 8px; color: #686d63; font-size: 11px; }
+.csv-import input[type='file'] { width: 100%; padding: 10px; border: 1px solid #c8c3b8; background: #f9f7f1; font-size: 11px; }
+.csv-import .primary-button { margin-top: 0; }
 .admin-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(240px, .7fr); gap: 0; margin-top: 38px; border: 1px solid #d8d4ca; }
 .product-form { padding: 34px; background: #f9f7f1; }
 .product-form h2 { margin: 0 0 28px; font-size: 27px; }
@@ -120,5 +129,5 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .candidate-empty { grid-column: 1 / -1; padding: 30px; border: 1px dashed #bcb8ad; color: #7e8278; text-align: center; font-size: 12px; }
 footer { width: min(1180px, calc(100% - 44px)); margin: 0 auto; padding: 26px 0 42px; display: flex; justify-content: space-between; color: #878b82; font-size: 11px; }
 @media (max-width: 900px) { .product-card { grid-template-columns: 1fr; } .difference { flex-direction: row; align-items: center; justify-content: space-between; } }
-@media (max-width: 720px) { nav { gap: 16px; } .nav-link { font-size: 12px; } .hero { grid-template-columns: 1fr; } .hero-seal { display: none; } .summary-grid { grid-template-columns: 1fr 1fr; } .metric-card.wide { grid-column: 1 / -1; border-top: 1px solid #d8d4ca; } .board-heading { align-items: start; gap: 20px; flex-direction: column; } .market-grid, .detail-prices, .candidate-grid, .admin-grid { grid-template-columns: 1fr; } .market-price + .market-price { border-left: 0; border-top: 1px solid #d8d4ca; } .admin-guide { display: none; } footer { gap: 12px; flex-direction: column; } }
+@media (max-width: 720px) { nav { gap: 16px; } .nav-link { font-size: 12px; } .hero { grid-template-columns: 1fr; } .hero-seal { display: none; } .summary-grid { grid-template-columns: 1fr 1fr; } .metric-card.wide { grid-column: 1 / -1; border-top: 1px solid #d8d4ca; } .board-heading { align-items: start; gap: 20px; flex-direction: column; } .board-actions { align-items: flex-start; flex-direction: column; gap: 12px; } .market-grid, .detail-prices, .candidate-grid, .admin-grid, .csv-panel { grid-template-columns: 1fr; } .market-price + .market-price { border-left: 0; border-top: 1px solid #d8d4ca; } .admin-guide { display: none; } footer { gap: 12px; flex-direction: column; } }
 @media (max-width: 460px) { .topbar { height: auto; padding-top: 14px; align-items: flex-start; flex-direction: column; } nav { width: 100%; } .nav-link { padding: 16px 0 12px; } .metric-card { min-height: 104px; padding: 18px; } .metric-card strong { font-size: 34px; } .field-row { grid-template-columns: 1fr; gap: 0; } .product-form, .candidate-card { padding: 20px; } }

@@ -4,7 +4,7 @@
 
 - 공개 화면: GitHub Pages 읽기 전용 SPA
 - 관리 화면: 로컬 `#/admin`
-- 데이터: JSON 상품·후보, append-only JSONL 가격·실행 이력
+- 데이터: JSON 상품·후보, append-only JSONL 가격·실행 이력, 관리·조회용 CSV
 - 수집: 매일 오전 9시(Asia/Seoul) Codex 스케줄 + 판매처별 서브에이전트 2개
 - 원칙: 운영과 테스트 모두 Mock·fixture·하드코딩 가격을 사용하지 않음
 
@@ -39,6 +39,20 @@ npm run build
 4. 두 판매처가 모두 승인된 상품만 활성화되어 다음 수집부터 가격 이력이 쌓입니다.
 
 가격과 후보 파일을 직접 수정할 때도 반드시 `npm run data:validate`를 통과해야 합니다. 자동 수집의 상세 규칙은 [collector-contract.md](docs/collector-contract.md)를 따릅니다.
+
+## CSV 관리
+
+- `web/public/data/products.csv`: 상품 목록 관리용입니다. 기존 행의 상품 정보를 수정하거나 ID가 빈 행을 추가한 뒤 로컬 관리 화면에서 가져올 수 있습니다. 판매처 URL 열은 확인용이며 가져오기에서 승인 매핑을 변경하지 않습니다.
+- `web/public/data/latest-prices.csv`: 활성 상품의 판매처별 최신 가격, 배송비, 총액, 재고, 신선도와 최저가 여부를 자동 생성합니다.
+
+명령으로 상품 CSV를 가져오려면 다음을 실행합니다.
+
+```bash
+cd web
+npm run data:products:import -- public/data/products.csv
+```
+
+CSV에서 누락된 기존 상품은 삭제하지 않고 보존합니다. 신규 행은 항상 승인 대기 상태로 생성되며, 후보 승인 없이 활성화할 수 없습니다.
 
 ## 배포
 

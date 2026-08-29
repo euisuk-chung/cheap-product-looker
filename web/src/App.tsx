@@ -43,7 +43,7 @@ async function jsonRequest<T>(url: string, init?: RequestInit): Promise<T> {
 function Header({ route }: { route: string }) {
   return (
     <header className="topbar">
-      <a className="brand" href="#/" aria-label="화장품 최저가 기록장 홈"><span className="brand-mark" aria-hidden="true">₩</span><span>PRICE CABINET</span></a>
+      <a className="brand" href="#/" aria-label="화장품 최저가 기록장 홈"><img className="brand-mark" src={`${import.meta.env.BASE_URL}favicon.png`} alt="" /><span>PRICE CABINET</span></a>
       <nav aria-label="주요 메뉴">
         <a className={`nav-link ${route !== '/admin' ? 'active' : ''}`} href="#/">가격 보드</a>
         <a className={`nav-link ${route === '/admin' ? 'active' : ''}`} href="#/admin">상품 관리</a>
@@ -98,7 +98,7 @@ function Dashboard({ snapshot }: { snapshot: PublicSnapshot }) {
         <article className="metric-card"><span>승인 대기</span><strong>{snapshot.pendingProductCount}</strong><small>개 상품</small></article>
         <article className="metric-card wide"><span>마지막 수집</span><strong className="metric-date">{dateTime(snapshot.latestSuccessfulRunAt)}</strong><small>실제 페이지 확인 기준</small></article>
       </section>
-      <section className="board-heading"><div><p className="eyebrow">LIVE PRICE BOARD</p><h2>가격 비교 보드</h2></div><span className="freshness"><i /> 36시간 이내 데이터만 최저가 판정</span></section>
+      <section className="board-heading"><div><p className="eyebrow">LIVE PRICE BOARD</p><h2>가격 비교 보드</h2></div><div className="board-actions"><span className="freshness"><i /> 36시간 이내 데이터만 최저가 판정</span><a className="csv-link" href={`${import.meta.env.BASE_URL}data/latest-prices.csv`} download>최신 가격 CSV ↓</a></div></section>
       {snapshot.products.length ? <section className="product-list">{snapshot.products.map((product) => <ProductCard key={product.id} product={product} sources={snapshot.sources} />)}</section> : (
         <section className="empty-state"><div className="empty-orbit" aria-hidden="true"><span>₩</span></div><p className="eyebrow">READY TO TRACK</p><h2>{snapshot.pendingProductCount ? `${snapshot.pendingProductCount}개 상품이 승인을 기다려요.` : '첫 상품 조사를 기다리고 있어요.'}</h2><p>로컬 상품 관리에서 두 판매처의 실제 후보를 확인하고 승인하면 가격 추적이 시작됩니다.</p><a className="primary-button" href="#/admin">후보 검토하기</a></section>
       )}
@@ -194,12 +194,27 @@ function AdminPage({ snapshot, onSnapshot }: { snapshot: PublicSnapshot; onSnaps
     finally { setBusy(false); }
   }
 
+  async function importCsv(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setNotice('');
+    const file = new FormData(event.currentTarget).get('productsCsv');
+    try {
+      if (!(file instanceof File) || !file.size) throw new Error('가져올 CSV 파일을 선택해 주세요.');
+      await jsonRequest('/api/products/import-csv', { method: 'POST', headers: { 'content-type': 'text/csv' }, body: await file.text() });
+      event.currentTarget.reset(); setNotice('CSV 상품 정보를 검증해 반영했습니다.'); await refresh();
+    } catch (error) { setNotice(error instanceof Error ? error.message : 'CSV를 가져오지 못했습니다.'); }
+    finally { setBusy(false); }
+  }
+
   return (
     <main className="admin-page">
       <section className="admin-heading"><p className="eyebrow">LOCAL ADMIN</p><h1>상품 관리</h1><p>실제 상품 후보를 확인하고 두 판매처 URL을 각각 승인합니다.</p></section>
       {local === false && <section className="readonly-banner"><strong>읽기 전용 공개판입니다.</strong><p>상품 등록과 후보 승인은 로컬에서 관리 서버를 함께 실행했을 때만 사용할 수 있습니다. 현재 승인 대기 상품은 {snapshot.pendingProductCount}개입니다.</p></section>}
       {local === null && <section className="readonly-banner"><p>로컬 관리 기능을 확인하고 있습니다.</p></section>}
       {local && state && <>
+        <section className="csv-panel">
+          <div><p className="eyebrow">CSV WORKFLOW</p><h2>표로 한꺼번에 관리</h2><p>상품 CSV를 내려받아 수정한 뒤 다시 가져오세요. 승인 URL은 읽기 전용이며 새 상품은 ID를 비워 둡니다.</p><div className="csv-links"><a className="csv-link" href={`${import.meta.env.BASE_URL}data/products.csv`} download>상품 목록 CSV ↓</a><a className="csv-link" href={`${import.meta.env.BASE_URL}data/latest-prices.csv`} download>최신 가격 CSV ↓</a></div></div>
+          <form className="csv-import" onSubmit={importCsv}><label>수정한 상품 CSV<input name="productsCsv" type="file" accept=".csv,text/csv" required /></label><button className="primary-button" disabled={busy}>검증 후 가져오기</button></form>
+        </section>
         <section className="admin-grid">
           <form className="product-form" onSubmit={submitProduct}><p className="eyebrow">NEW RESEARCH REQUEST</p><h2>새 화장품 등록</h2><label>브랜드<input name="brand" required maxLength={80} placeholder="예: 라운드랩" /></label><label>상품명<input name="name" required maxLength={160} placeholder="예: 1025 독도 토너" /></label><div className="field-row"><label>용량<input name="capacity" required maxLength={80} placeholder="예: 200ml" /></label><label>색상·구성<input name="variant" maxLength={120} placeholder="예: 단품" /></label></div><button className="primary-button form-submit" disabled={busy}>조사 대기에 추가</button></form>
           <aside className="admin-guide"><span>01</span><h3>상품 등록</h3><p>브랜드와 정확한 용량·구성을 적습니다.</p><span>02</span><h3>에이전트 조사</h3><p>매일 9시 두 판매처의 실제 후보를 찾습니다.</p><span>03</span><h3>URL 승인</h3><p>두 후보를 승인하면 가격 추적이 시작됩니다.</p></aside>

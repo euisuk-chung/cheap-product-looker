@@ -17,6 +17,7 @@ import {
   type Source,
   type SourceId,
 } from '../src/lib/schema.ts';
+import { latestPricesCsv, productsCsv } from './csv.ts';
 
 export const dataDirectory = fileURLToPath(new URL('../public/data/', import.meta.url));
 
@@ -27,6 +28,8 @@ const files = {
   observations: path.join(dataDirectory, 'observations.jsonl'),
   runs: path.join(dataDirectory, 'runs.jsonl'),
   snapshot: path.join(dataDirectory, 'snapshot.json'),
+  productsCsv: path.join(dataDirectory, 'products.csv'),
+  latestPricesCsv: path.join(dataDirectory, 'latest-prices.csv'),
 };
 
 async function readJson<T>(filePath: string, parser: { parse: (value: unknown) => T }): Promise<T> {
@@ -58,7 +61,11 @@ export async function loadStore() {
 }
 
 export async function saveProducts(products: Product[]) {
-  await writeAtomic(files.products, `${JSON.stringify(productsSchema.parse(products), null, 2)}\n`);
+  const valid = productsSchema.parse(products);
+  await Promise.all([
+    writeAtomic(files.products, `${JSON.stringify(valid, null, 2)}\n`),
+    writeAtomic(files.productsCsv, productsCsv(valid)),
+  ]);
 }
 
 export async function saveCandidates(candidates: MarketCandidate[]) {
@@ -117,7 +124,11 @@ export function makeSnapshot(input: {
 export async function rebuildSnapshot() {
   const store = await loadStore();
   const snapshot = makeSnapshot(store);
-  await writeAtomic(files.snapshot, `${JSON.stringify(snapshot, null, 2)}\n`);
+  await Promise.all([
+    writeAtomic(files.snapshot, `${JSON.stringify(snapshot, null, 2)}\n`),
+    writeAtomic(files.productsCsv, productsCsv(store.products)),
+    writeAtomic(files.latestPricesCsv, latestPricesCsv(snapshot)),
+  ]);
   return snapshot;
 }
 

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { loadStore, dataDirectory, makeSnapshot, officialSourceUrl } from './store.ts';
+import { latestPricesCsv, productsCsv } from './csv.ts';
 
 const snapshotSchema = z.object({
   generatedAt: z.string().datetime({ offset: true }),
@@ -28,4 +29,10 @@ const computed = makeSnapshot(store);
 if (diskSnapshot.activeProductCount !== computed.activeProductCount || diskSnapshot.pendingProductCount !== computed.pendingProductCount) {
   throw new Error('snapshot.json is stale. Run npm run data:rebuild.');
 }
+const [diskProductsCsv, diskLatestPricesCsv] = await Promise.all([
+  readFile(path.join(dataDirectory, 'products.csv'), 'utf8'),
+  readFile(path.join(dataDirectory, 'latest-prices.csv'), 'utf8'),
+]);
+if (diskProductsCsv !== productsCsv(store.products)) throw new Error('products.csv is stale. Run npm run data:rebuild.');
+if (diskLatestPricesCsv !== latestPricesCsv(computed)) throw new Error('latest-prices.csv is stale. Run npm run data:rebuild.');
 console.log(`Validated ${store.products.length} products, ${store.candidates.length} candidates, ${store.observations.length} observations, and ${store.runs.length} runs.`);

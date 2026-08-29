@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { sourceIdSchema, productSchema } from '../src/lib/schema.ts';
 import { loadStore, rebuildSnapshot, saveCandidates, saveProducts } from './store.ts';
+import { importProductsCsv } from './csv.ts';
 
 const app = express();
 app.use(express.json({ limit: '64kb' }));
@@ -15,6 +16,16 @@ app.get('/api/state', async (_request, response, next) => {
   try {
     const store = await loadStore();
     response.json({ ...store, snapshot: await rebuildSnapshot() });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/products/import-csv', express.text({ type: 'text/csv', limit: '512kb' }), async (request, response, next) => {
+  try {
+    const store = await loadStore();
+    const products = importProductsCsv(request.body, store.products);
+    await saveProducts(products);
+    const snapshot = await rebuildSnapshot();
+    response.json({ importedCount: products.length, snapshot });
   } catch (error) { next(error); }
 });
 

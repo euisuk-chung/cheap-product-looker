@@ -24,7 +24,8 @@
 
 - 결과는 `src/lib/schema.ts`의 `collectorPayloadSchema`를 통과해야 한다.
 - 임시 payload를 `web/.collector-result.json`에 만든 뒤 `npm run data:import -- .collector-result.json`으로 가져온다.
+- 가져오기 후 `npm run data:rebuild`가 `products.csv`와 `latest-prices.csv`를 실제 저장 데이터에서 다시 생성한다. CSV에 가격을 직접 작성하지 않는다.
 - `npm run lint`와 `npm run build`가 모두 성공한 경우에만 공개 데이터 파일을 커밋한다.
-- 커밋 대상은 `web/public/data/*.json`과 `web/public/data/*.jsonl`뿐이다.
+- 커밋 대상은 `web/public/data/*.json`, `web/public/data/*.jsonl`, 자동 생성된 `web/public/data/*.csv`뿐이다.
 - 커밋 메시지는 `data: refresh prices YYYY-MM-DD` 형식이다. `main`에 일반 push만 사용하고 force push는 금지한다.
 - 원격 `main`이 앞서 있거나 push가 거절되면 로컬 데이터를 보존하고 실행 결과에 배포 실패를 보고한다.
