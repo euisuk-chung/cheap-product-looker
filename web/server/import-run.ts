@@ -10,7 +10,19 @@ const payload = collectorPayloadSchema.parse(JSON.parse(await readFile(resolve(i
 const store = await loadStore();
 if (store.runs.some((run) => run.id === payload.run.id)) throw new Error(`Run ${payload.run.id} was already imported.`);
 
+function sameApprovedProduct(approvedUrl: string, observedUrl: string) {
+  const approved = new URL(approvedUrl);
+  const observed = new URL(observedUrl);
+  if (approved.hostname !== observed.hostname || approved.pathname !== observed.pathname) return false;
+  for (const key of ['goodsNo', 'itemId', 'vendorItemId']) {
+    const expected = approved.searchParams.get(key);
+    if (expected && observed.searchParams.get(key) !== expected) return false;
+  }
+  return true;
+}
+
 for (const candidate of payload.candidates) {
+  if (candidate.status !== 'pending') throw new Error(`Collector candidates must remain pending: ${candidate.id}`);
   if (!store.products.some((product) => product.id === candidate.productId)) throw new Error(`Unknown product for candidate ${candidate.id}`);
   if (!officialSourceUrl(candidate.url, candidate.sourceId, store.sources)) throw new Error(`Candidate URL is not official: ${candidate.url}`);
 }
@@ -18,8 +30,10 @@ for (const candidate of payload.candidates) {
 for (const observation of payload.observations) {
   const product = store.products.find((item) => item.id === observation.productId);
   if (!product || product.status !== 'active') throw new Error(`Observation product is not active: ${observation.productId}`);
-  if (!product.markets[observation.sourceId]) throw new Error(`No approved ${observation.sourceId} mapping for ${observation.productId}`);
+  const mapping = product.markets[observation.sourceId];
+  if (!mapping) throw new Error(`No approved ${observation.sourceId} mapping for ${observation.productId}`);
   if (!officialSourceUrl(observation.sourceUrl, observation.sourceId, store.sources)) throw new Error(`Observation URL is not official: ${observation.sourceUrl}`);
+  if (!sameApprovedProduct(mapping.approvedUrl, observation.sourceUrl)) throw new Error(`Observation does not match the approved product URL: ${observation.sourceUrl}`);
 }
 
 const candidates = [...store.candidates];
