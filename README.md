@@ -2,6 +2,8 @@
 
 쿠팡과 올리브영의 공개 상품 페이지에서 일반 구매자가 실제로 지불하는 상품가와 필수 배송비를 매일 기록하고 비교하는 로컬 우선 대시보드입니다.
 
+전체 구성과 데이터 흐름은 [ARCHITECTURE.md](ARCHITECTURE.md)를 참고하세요.
+
 - 공개 화면: GitHub Pages 읽기 전용 SPA
 - 관리 화면: 로컬 `#/admin`
 - 데이터: JSON 상품·후보, append-only JSONL 가격·실행 이력, 관리·조회용 CSV
