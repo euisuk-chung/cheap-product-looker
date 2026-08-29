@@ -1,0 +1,9 @@
+web/node_modules/
+web/dist/
+web/.preview-root/
+web/.collector-result.json
+web/public/data/*.tmp
+web/.wrangler/
+web/.next/
+.DS_Store
+Thumbs.db

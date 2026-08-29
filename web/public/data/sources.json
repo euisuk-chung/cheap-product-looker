@@ -1,0 +1,4 @@
+[
+  { "id": "coupang", "label": "쿠팡", "officialHosts": ["coupang.com", "www.coupang.com"], "accent": "#cf4b38" },
+  { "id": "oliveyoung", "label": "올리브영", "officialHosts": ["oliveyoung.co.kr", "www.oliveyoung.co.kr"], "accent": "#6b8e3f" }
+]

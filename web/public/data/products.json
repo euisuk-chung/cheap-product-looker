@@ -1,0 +1,35 @@
+[
+  {
+    "id": "117f3ba4-1c50-417c-b73e-94833829697f",
+    "brand": "라운드랩",
+    "name": "1025 독도 토너",
+    "capacity": "200ml",
+    "variant": "단품",
+    "status": "pending",
+    "createdAt": "2026-08-29T22:02:07+09:00",
+    "updatedAt": "2026-08-29T22:02:07+09:00",
+    "markets": {}
+  },
+  {
+    "id": "f064cf6b-b53c-4d33-ac4d-4e61fbef8772",
+    "brand": "바이오더마",
+    "name": "센시비오 H2O",
+    "capacity": "500ml",
+    "variant": "단품",
+    "status": "pending",
+    "createdAt": "2026-08-29T22:00:26+09:00",
+    "updatedAt": "2026-08-29T22:00:26+09:00",
+    "markets": {}
+  },
+  {
+    "id": "7336a148-efeb-4914-a936-69525dff4d3d",
+    "brand": "미샤",
+    "name": "4D 마스카라",
+    "capacity": "7g",
+    "variant": "블랙 단품",
+    "status": "pending",
+    "createdAt": "2026-08-29T22:00:26+09:00",
+    "updatedAt": "2026-08-29T22:00:26+09:00",
+    "markets": {}
+  }
+]
