@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "data:validate": "tsx server/validate.ts",
     "data:rebuild": "tsx server/rebuild-snapshot.ts",
-    "data:import": "tsx server/import-run.ts"
+    "data:import": "tsx server/import-run.ts",
+    "data:publish-status": "tsx server/update-publish-status.ts"
   },
   "dependencies": {
     "express": "^5.2.1",
