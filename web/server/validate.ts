@@ -33,6 +33,7 @@ const [diskProductsCsv, diskLatestPricesCsv] = await Promise.all([
   readFile(path.join(dataDirectory, 'products.csv'), 'utf8'),
   readFile(path.join(dataDirectory, 'latest-prices.csv'), 'utf8'),
 ]);
-if (diskProductsCsv !== productsCsv(store.products)) throw new Error('products.csv is stale. Run npm run data:rebuild.');
-if (diskLatestPricesCsv !== latestPricesCsv(computed)) throw new Error('latest-prices.csv is stale. Run npm run data:rebuild.');
+const normalizeNewlines = (value: string) => value.replace(/\r\n/g, '\n');
+if (normalizeNewlines(diskProductsCsv) !== normalizeNewlines(productsCsv(store.products))) throw new Error('products.csv is stale. Run npm run data:rebuild.');
+if (normalizeNewlines(diskLatestPricesCsv) !== normalizeNewlines(latestPricesCsv(computed))) throw new Error('latest-prices.csv is stale. Run npm run data:rebuild.');
 console.log(`Validated ${store.products.length} products, ${store.candidates.length} candidates, ${store.observations.length} observations, and ${store.runs.length} runs.`);
