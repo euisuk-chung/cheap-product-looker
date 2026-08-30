@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-30T02:11:08.155Z",
+  "generatedAt": "2026-08-30T02:33:34.426Z",
   "activeProductCount": 2,
   "pendingProductCount": 0,
   "pendingReviewCount": 14,
@@ -89,6 +89,13 @@
         "checkedAt": "2026-08-30T10:38:19+09:00",
         "isFresh": true,
         "basis": "candidate"
+      },
+      "displayImage": {
+        "imageUrl": "https://image.oliveyoung.co.kr/cfimages/cf-goods/uploads/images/thumbnails/10/0000/0025/A00000025310207ko.jpg?l=ko",
+        "productUrl": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000253102",
+        "sourceId": "oliveyoung",
+        "checkedAt": "2026-08-30T10:37:34+09:00",
+        "basis": "candidate"
       }
     },
     {
@@ -153,6 +160,13 @@
         "quantityUnit": "ml",
         "checkedAt": "2026-08-30T10:37:34+09:00",
         "isFresh": true,
+        "basis": "candidate"
+      },
+      "displayImage": {
+        "imageUrl": "https://image.oliveyoung.co.kr/cfimages/cf-goods/uploads/images/thumbnails/10/0000/0025/A00000025524417ko.png?l=ko",
+        "productUrl": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000255244",
+        "sourceId": "oliveyoung",
+        "checkedAt": "2026-08-30T10:37:34+09:00",
         "basis": "candidate"
       }
     }

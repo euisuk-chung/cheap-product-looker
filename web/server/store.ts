@@ -118,7 +118,22 @@ export function makeSnapshot(input: {
     }));
     const purchasePool = observationPurchases.some((item) => item.isFresh) ? observationPurchases.filter((item) => item.isFresh) : observationPurchases.length ? observationPurchases : candidatePurchases;
     const bestPurchase = purchasePool.sort((left, right) => left.unitPrice - right.unitPrice)[0] ?? null;
-    return { ...product, latestBySource: latest, winnerSourceIds, history, bestPurchase };
+    const imageObservation = history.filter((item) => item.imageUrl).sort((left, right) => left.capturedAt.localeCompare(right.capturedAt)).at(-1);
+    const imageCandidate = input.candidates.filter((candidate) => candidate.productId === product.id && candidate.imageUrl && candidate.status === 'approved' && product.markets[candidate.sourceId]?.approvedUrl === candidate.url).sort((left, right) => (left.reviewedAt ?? left.discoveredAt).localeCompare(right.reviewedAt ?? right.discoveredAt)).at(-1);
+    const displayImage = imageObservation?.imageUrl ? {
+      imageUrl: imageObservation.imageUrl,
+      productUrl: imageObservation.sourceUrl,
+      sourceId: imageObservation.sourceId,
+      checkedAt: imageObservation.capturedAt,
+      basis: 'observation' as const,
+    } : imageCandidate?.imageUrl ? {
+      imageUrl: imageCandidate.imageUrl,
+      productUrl: imageCandidate.url,
+      sourceId: imageCandidate.sourceId,
+      checkedAt: imageCandidate.reviewedAt ?? imageCandidate.discoveredAt,
+      basis: 'candidate' as const,
+    } : null;
+    return { ...product, latestBySource: latest, winnerSourceIds, history, bestPurchase, displayImage };
   });
   const successfulRuns = input.runs.filter((run) => run.sourceResults.some((result) => result.status === 'succeeded'));
   return {

@@ -61,6 +61,7 @@ for (const review of payload.reviews) {
     reviewedAt: review.reviewedAt,
     reviewedBy: review.reviewer,
     reviewReason: review.reason,
+    imageUrl: review.verifiedImageUrl,
     status: review.decision === 'failed' ? 'rejected' : candidates[index].status,
   };
 }
@@ -103,6 +104,7 @@ for (const observation of payload.observations) {
   if (!mapping || !reviewedCandidate) throw new Error(`Observation was not selected by the review agent: ${observation.sourceUrl}`);
   if (!officialSourceUrl(observation.sourceUrl, observation.sourceId, store.sources)) throw new Error(`Observation URL is not official: ${observation.sourceUrl}`);
   if (!sameApprovedProduct(mapping.approvedUrl, observation.sourceUrl)) throw new Error(`Observation does not match the reviewed mapping: ${observation.sourceUrl}`);
+  if (observation.imageUrl !== reviewedCandidate.imageUrl) throw new Error(`Observation image does not match the reviewed candidate: ${observation.sourceUrl}`);
   if (observation.quantityUnit !== product.comparisonUnit || observation.quantityUnit !== mapping.quantityUnit || observation.totalQuantity !== mapping.totalQuantity) throw new Error(`Observation quantity does not match the reviewed package: ${observation.sourceUrl}`);
 }
 

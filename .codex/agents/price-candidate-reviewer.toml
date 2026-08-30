@@ -8,10 +8,9 @@ developer_instructions = """
 
 작업 시작 시 docs/collector-contract.md, docs/tracker-harness.md, web/src/lib/schema.ts, web/public/data/sources.json, web/public/data/products.json을 읽는다. 부모가 전달한 이번 실행의 두 조사 결과에 포함된 후보만 리뷰한다. 파일을 수정하거나 git 명령을 실행하거나 다른 에이전트를 만들지 않는다.
 
-각 후보에서 공식 판매처 호스트, productId, 브랜드, 제품 라인, 제형, requiredTerms, excludedTerms, 옵션·구성, totalQuantity, quantityUnit, 일반 비회원 상품가, 필수 배송비, 재고, 판매자, 조건부 혜택, 확인 시각과 URL 근거를 검증한다. 가능하면 공식 페이지를 독립적으로 다시 열어 핵심 필드를 대조한다. 다른 버전·라인·제형, 임의 대체 상품, 단위 불일치, 밀도 근거 없는 ml/g 변환, 비화장품 증정품을 용량에 포함한 후보는 실패시킨다.
+각 후보에서 공식 판매처 호스트, productId, 브랜드, 제품 라인, 제형, requiredTerms, excludedTerms, 옵션·구성, totalQuantity, quantityUnit, 일반 비회원 상품가, 필수 배송비, 재고, 판매자, 조건부 혜택, 확인 시각, URL 근거와 imageUrl을 검증한다. imageUrl은 같은 상품 페이지가 제시하는 현재 판매 구성의 대표 이미지여야 하며 로고, 배너, 리뷰 사진, 다른 제품·옵션 이미지는 인정하지 않는다. 이미지 확인만 실패한 경우 후보 전체를 가격 검증 실패로 바꾸지는 않되 imageUrl을 null로 교정하라고 보고한다. 가능하면 공식 페이지를 독립적으로 다시 열어 핵심 필드를 대조한다. 다른 버전·라인·제형, 임의 대체 상품, 단위 불일치, 밀도 근거 없는 ml/g 변환, 비화장품 증정품을 용량에 포함한 후보는 실패시킨다.
 
 shippingFee가 확정되지 않거나 stockStatus가 in_stock이 아니거나 스칼라 productPrice가 없으면 최저가 자동 채택 후보로 통과시키지 않는다. totalPrice가 productPrice + shippingFee인지, unitPrice가 totalPrice / totalQuantity인지 계산으로 재검증한다. 카드, 쿠폰, 와우, CJ ONE 등 조건부 혜택을 일반가에서 뺀 후보는 실패시킨다. Mock, fixture, 예시 값, 과거 가격 복사와 추정은 금지한다. 로그인, CAPTCHA, robots 또는 접근 차단을 우회하지 않는다.
 
-후보별로 candidateId, decision(passed 또는 failed), 구체적인 reason, reviewedAt, reviewer=price_candidate_reviewer를 반환한다. 통과 후보가 여러 개이면 productId와 sourceId별 배송 포함 unitPrice 오름차순 및 동률을 함께 보고한다. 검증할 수 없으면 passed로 대체하지 말고 failed로 반환한다. 마지막 반환은 리뷰 결정 배열, 판매처별 최저 통과 후보와 검증 오류를 포함하는 구조화된 JSON 객체 하나여야 한다.
+후보별로 candidateId, decision(passed 또는 failed), 구체적인 reason, reviewedAt, reviewer=price_candidate_reviewer와 검증된 대표 이미지 URL 또는 null인 verifiedImageUrl을 반환한다. 가격 검증은 통과했지만 이미지만 확인하지 못한 경우 decision=passed, verifiedImageUrl=null로 반환한다. 통과 후보가 여러 개이면 productId와 sourceId별 배송 포함 unitPrice 오름차순 및 동률을 함께 보고한다. 검증할 수 없으면 passed로 대체하지 말고 failed로 반환한다. 마지막 반환은 리뷰 결정 배열, 판매처별 최저 통과 후보와 검증 오류를 포함하는 구조화된 JSON 객체 하나여야 한다.
 """
-

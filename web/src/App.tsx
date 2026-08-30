@@ -36,6 +36,19 @@ function candidateUnitPrice(candidate: MarketCandidate) {
   return (candidate.observedPrice + candidate.shippingFee) / candidate.totalQuantity;
 }
 
+function ProductVisual({ product, sources, large = false }: { product: ProductSnapshot; sources: Source[]; large?: boolean }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const image = product.displayImage;
+  const source = sources.find((item) => item.id === image?.sourceId);
+  if (!image || failedUrl === image.imageUrl) return <div className={`product-visual placeholder ${large ? 'large' : ''}`} aria-label={`${product.name} 상품 이미지 미확인`}><span>IMAGE</span><small>다음 수집에서 확인</small></div>;
+  return (
+    <a className={`product-visual ${large ? 'large' : ''}`} href={image.productUrl} target="_blank" rel="noreferrer" aria-label={`${source?.label ?? image.sourceId}의 ${product.name} 상품 페이지 열기`}>
+      <img src={image.imageUrl} alt={`${product.brand} ${product.name} · ${source?.label ?? image.sourceId} 판매 이미지`} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailedUrl(image.imageUrl)} />
+      <span>{source?.label ?? image.sourceId} · {image.basis === 'observation' ? '최근 수집' : '현재 추적 URL'} ↗</span>
+    </a>
+  );
+}
+
 function dateTime(value: string | null | undefined) {
   if (!value) return '아직 없음';
   return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Seoul' }).format(new Date(value));
@@ -88,6 +101,7 @@ function ProductCard({ product, sources }: { product: ProductSnapshot; sources: 
   const bestSource = sources.find((source) => source.id === product.bestPurchase?.sourceId);
   return (
     <article className="product-card">
+      <ProductVisual product={product} sources={sources} />
       <div className="product-info">
         <p className="eyebrow">{product.brand}</p>
         <h3>{product.name}</h3>
@@ -177,7 +191,7 @@ function ProductDetail({ product, sources }: { product: ProductSnapshot; sources
   return (
     <main className="detail-page">
       <a className="back-link" href="#/">← 가격 보드</a>
-      <section className="detail-heading"><p className="eyebrow">{product.brand}</p><h1>{product.name}</h1><p>{product.capacity}{product.variant ? ` · ${product.variant}` : ''}</p></section>
+      <section className="detail-heading"><div><p className="eyebrow">{product.brand}</p><h1>{product.name}</h1><p>{product.capacity}{product.variant ? ` · ${product.variant}` : ''}</p></div><ProductVisual product={product} sources={sources} large /></section>
       <section className="detail-prices">{sources.map((source) => <MarketPrice key={source.id} product={product} source={source} />)}</section>
       <section className="history-panel"><div className="board-heading"><div><p className="eyebrow">UNIT PRICE HISTORY</p><h2>가격 변동 차트</h2></div><span>{chartPointCount}개 비교 가능 관측값 · 원/{product.comparisonUnit}</span></div><PriceChart product={product} sources={sources} /></section>
     </main>

@@ -51,6 +51,7 @@ export const candidateSchema = z.object({
   sourceId: sourceIdSchema,
   title: z.string().min(1),
   url: z.string().url(),
+  imageUrl: z.string().url().nullable().default(null),
   seller: z.string().min(1).nullable(),
   packageDescription: z.string().min(1),
   totalQuantity: z.number().positive(),
@@ -77,6 +78,7 @@ export const candidateReviewSchema = z.object({
   reason: z.string().min(1),
   reviewedAt: isoDateSchema,
   reviewer: z.literal('price_candidate_reviewer'),
+  verifiedImageUrl: z.string().url().nullable().default(null),
 });
 
 export const observationSchema = z.object({
@@ -96,6 +98,7 @@ export const observationSchema = z.object({
   benefitNote: z.string().min(1).nullable(),
   capturedAt: isoDateSchema,
   sourceUrl: z.string().url(),
+  imageUrl: z.string().url().nullable().default(null),
 }).superRefine((value, context) => {
   if (value.shippingFee === null && (value.totalPrice !== null || value.comparable)) {
     context.addIssue({ code: 'custom', message: '배송비가 불명확하면 총액은 null이고 비교 불가여야 합니다.' });
@@ -174,6 +177,13 @@ export type ProductSnapshot = Product & {
     quantityUnit: QuantityUnit;
     checkedAt: string;
     isFresh: boolean;
+    basis: 'observation' | 'candidate';
+  } | null;
+  displayImage: {
+    imageUrl: string;
+    productUrl: string;
+    sourceId: SourceId;
+    checkedAt: string;
     basis: 'observation' | 'candidate';
   } | null;
 };

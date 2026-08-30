@@ -11,7 +11,7 @@ const snapshotSchema = z.object({
   pendingReviewCount: z.number().int().nonnegative(),
   latestSuccessfulRunAt: z.string().datetime({ offset: true }).nullable(),
   sources: z.array(z.unknown()),
-  products: z.array(z.unknown()),
+  products: z.array(z.object({ id: z.string().uuid(), displayImage: z.unknown().optional() }).passthrough()),
   runs: z.array(z.unknown()),
 });
 
@@ -33,6 +33,9 @@ const diskSnapshot = snapshotSchema.parse(JSON.parse(await readFile(path.join(da
 const computed = makeSnapshot(store);
 if (diskSnapshot.activeProductCount !== computed.activeProductCount || diskSnapshot.pendingProductCount !== computed.pendingProductCount || diskSnapshot.pendingReviewCount !== computed.pendingReviewCount) {
   throw new Error('snapshot.json is stale. Run npm run data:rebuild.');
+}
+if (JSON.stringify(diskSnapshot.products.map((product) => product.displayImage)) !== JSON.stringify(computed.products.map((product) => product.displayImage))) {
+  throw new Error('snapshot.json product images are stale. Run npm run data:rebuild.');
 }
 const [diskProductsCsv, diskLatestPricesCsv] = await Promise.all([
   readFile(path.join(dataDirectory, 'products.csv'), 'utf8'),
