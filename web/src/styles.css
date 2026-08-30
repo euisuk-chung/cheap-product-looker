@@ -45,17 +45,18 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .product-list { border-bottom: 1px solid #bcb8ad; }
 .product-card { display: grid; grid-template-columns: 160px minmax(170px, .8fr) minmax(380px, 1.55fr) 105px; gap: 26px; align-items: stretch; padding: 30px 0; border-bottom: 1px solid #d8d4ca; }
 .product-card:last-child { border-bottom: 0; }
-.product-visual { min-width: 0; aspect-ratio: 1; display: block; position: relative; overflow: hidden; border: 1px solid #d8d4ca; background: #fff; }
+.product-visual { width: 100%; height: auto; min-width: 0; aspect-ratio: 1; align-self: start; display: block; position: relative; overflow: hidden; border: 1px solid #d8d4ca; background: #fff; }
 .product-visual img { width: 100%; height: 100%; display: block; object-fit: contain; transition: transform .25s ease; }
 .product-visual:hover img { transform: scale(1.035); }
 .product-visual > span { position: absolute; right: 8px; bottom: 8px; left: 8px; padding: 7px 8px; color: #fff; background: rgba(38,56,42,.88); font: 500 8px/1.35 'DM Mono', monospace; letter-spacing: .02em; text-align: center; }
 .product-visual.placeholder { display: grid; place-items: center; align-content: center; gap: 8px; color: #9a9d94; background: repeating-linear-gradient(135deg, #f3f0e8, #f3f0e8 8px, #eeeae0 8px, #eeeae0 16px); }
 .product-visual.placeholder span { position: static; padding: 0; color: #7f8479; background: none; font: 500 11px/1 'DM Mono', monospace; letter-spacing: .14em; }
 .product-visual.placeholder small { font-size: 9px; }
-.product-info h3 { margin: 0 0 7px; font-size: 23px; }
+.product-info { min-width: 0; }
+.product-info h3 { margin: 0 0 7px; font-size: 23px; overflow-wrap: anywhere; }
 .product-info > span, .muted { color: #777b72; font-size: 12px; }
 .text-link { display: block; margin-top: 25px; color: #52634d; font-size: 12px; font-weight: 600; }
-.best-buy-button { display: grid; gap: 5px; margin-top: 22px; padding: 13px 14px; color: #fff; background: #26382a; border-radius: 3px; }
+.best-buy-button { min-width: 0; display: grid; gap: 5px; margin-top: 22px; padding: 13px 14px; color: #fff; background: #26382a; border-radius: 3px; }
 .best-buy-button span { font-size: 10px; color: #c7d2c4; }
 .best-buy-button strong { font: 500 18px/1.2 'DM Mono', monospace; }
 .best-buy-button small { font-size: 10px; color: #aeb9aa; }
