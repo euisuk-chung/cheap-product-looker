@@ -12,6 +12,7 @@ const emptySnapshot: PublicSnapshot = {
   generatedAt: new Date(0).toISOString(),
   activeProductCount: 0,
   pendingProductCount: 0,
+  pendingReviewCount: 0,
   latestSuccessfulRunAt: null,
   sources: [],
   products: [],
@@ -55,7 +56,7 @@ function Header({ route }: { route: string }) {
       <a className="brand" href="#/" aria-label="화장품 최저가 기록장 홈"><img className="brand-mark" src={`${import.meta.env.BASE_URL}favicon.png`} alt="" /><span>PRICE CABINET</span></a>
       <nav aria-label="주요 메뉴">
         <a className={`nav-link ${route !== '/admin' ? 'active' : ''}`} href="#/">가격 보드</a>
-        <a className={`nav-link ${route === '/admin' ? 'active' : ''}`} href="#/admin">상품 관리</a>
+        <a className={`nav-link ${route === '/admin' ? 'active' : ''}`} href="#/admin">추적 현황</a>
       </nav>
     </header>
   );
@@ -63,7 +64,8 @@ function Header({ route }: { route: string }) {
 
 function MarketPrice({ product, source }: { product: ProductSnapshot; source: Source }) {
   const observation = product.latestBySource[source.id];
-  const winner = product.winnerSourceIds.includes(source.id);
+  const winner = product.bestPurchase?.sourceId === source.id;
+  const purchaseUrl = observation?.sourceUrl ?? product.markets[source.id]?.approvedUrl;
   return (
     <div className={`market-price ${winner ? 'winner' : ''}`}>
       <div className="market-name"><i style={{ background: source.accent }} />{source.label}{winner && <b>LOWEST</b>}</div>
@@ -75,6 +77,7 @@ function MarketPrice({ product, source }: { product: ProductSnapshot; source: So
           <span className={`data-status ${observation.isFresh ? '' : 'stale'}`}>{observation.stockStatus === 'out_of_stock' ? '품절' : observation.isFresh ? '최신' : '오래됨'} · {dateTime(observation.capturedAt)}</span>
         </>
       )}
+      {purchaseUrl && <a className="market-buy-link" href={purchaseUrl} target="_blank" rel="noreferrer">구매 페이지 ↗</a>}
     </div>
   );
 }
@@ -82,12 +85,14 @@ function MarketPrice({ product, source }: { product: ProductSnapshot; source: So
 function ProductCard({ product, sources }: { product: ProductSnapshot; sources: Source[] }) {
   const unitPrices = Object.values(product.latestBySource).filter((item) => item?.isFresh && item.comparable && item.unitPrice !== null && item.quantityUnit === product.comparisonUnit).map((item) => item.unitPrice as number).sort((a, b) => a - b);
   const difference = unitPrices.length > 1 ? unitPrices.at(-1)! - unitPrices[0] : null;
+  const bestSource = sources.find((source) => source.id === product.bestPurchase?.sourceId);
   return (
     <article className="product-card">
       <div className="product-info">
         <p className="eyebrow">{product.brand}</p>
         <h3>{product.name}</h3>
         <span>{product.capacity}{product.variant ? ` · ${product.variant}` : ''}</span>
+        {product.bestPurchase && <a className="best-buy-button" href={product.bestPurchase.url} target="_blank" rel="noreferrer"><span>현재 최저가 구매</span><strong>{unitMoney(product.bestPurchase.unitPrice, product.bestPurchase.quantityUnit)}</strong><small>{bestSource?.label ?? product.bestPurchase.sourceId} · {product.bestPurchase.basis === 'observation' ? product.bestPurchase.isFresh ? '최신 검증' : '마지막 검증값' : '기존 확인 후보'} ↗</small></a>}
         <a className="text-link" href={`#/product/${product.id}`}>가격 이력 보기 <span aria-hidden="true">→</span></a>
       </div>
       <div className="market-grid">{sources.map((source) => <MarketPrice key={source.id} product={product} source={source} />)}</div>
@@ -105,12 +110,12 @@ function Dashboard({ snapshot }: { snapshot: PublicSnapshot }) {
       </section>
       <section className="summary-grid" aria-label="수집 현황">
         <article className="metric-card"><span>추적 중</span><strong>{snapshot.activeProductCount}</strong><small>개 상품</small></article>
-        <article className="metric-card"><span>승인 대기</span><strong>{snapshot.pendingProductCount}</strong><small>개 상품</small></article>
+        <article className="metric-card"><span>자동 검증 대기</span><strong>{snapshot.pendingReviewCount}</strong><small>개 후보</small></article>
         <article className="metric-card wide"><span>마지막 수집</span><strong className="metric-date">{dateTime(snapshot.latestSuccessfulRunAt)}</strong><small>실제 페이지 확인 기준</small></article>
       </section>
       <section className="board-heading"><div><p className="eyebrow">LIVE PRICE BOARD</p><h2>단위 가격 비교 보드</h2></div><div className="board-actions"><span className="freshness"><i /> 36시간 이내 배송 포함 단위가만 판정</span><a className="csv-link" href={`${import.meta.env.BASE_URL}data/latest-prices.csv`} download>최신 가격 CSV ↓</a></div></section>
       {snapshot.products.length ? <section className="product-list">{snapshot.products.map((product) => <ProductCard key={product.id} product={product} sources={snapshot.sources} />)}</section> : (
-        <section className="empty-state"><div className="empty-orbit" aria-hidden="true"><span>₩</span></div><p className="eyebrow">READY TO TRACK</p><h2>{snapshot.pendingProductCount ? `${snapshot.pendingProductCount}개 상품이 승인을 기다려요.` : '첫 상품 조사를 기다리고 있어요.'}</h2><p>공개 상품 관리에서 실제 후보와 원본 URL을 살펴보고, 로컬 관리에서 승인할 수 있습니다.</p><a className="primary-button" href="#/admin">후보 살펴보기</a></section>
+        <section className="empty-state"><div className="empty-orbit" aria-hidden="true"><span>₩</span></div><p className="eyebrow">READY TO TRACK</p><h2>{snapshot.pendingProductCount ? `${snapshot.pendingProductCount}개 상품을 조사하고 있어요.` : '첫 가격 조사를 기다리고 있어요.'}</h2><p>조사 에이전트가 판매 링크를 찾고 리뷰 에이전트가 검증하면 최저가 구매 링크가 자동으로 반영됩니다.</p><a className="primary-button" href="#/admin">추적 상태 보기</a></section>
       )}
     </main>
   );
@@ -152,17 +157,18 @@ function ProductDetail({ product, sources }: { product: ProductSnapshot; sources
   );
 }
 
-function CandidateCard({ candidate, source, onDecision, busy, readOnly, lowest, current }: { candidate: MarketCandidate; source?: Source; onDecision: (id: string, decision: 'approved' | 'rejected') => void; busy: boolean; readOnly: boolean; lowest: boolean; current: boolean }) {
+function CandidateCard({ candidate, source, lowest, current }: { candidate: MarketCandidate; source?: Source; lowest: boolean; current: boolean }) {
   const totalPrice = candidate.observedPrice !== null && candidate.shippingFee !== null ? candidate.observedPrice + candidate.shippingFee : null;
   const unitPrice = candidateUnitPrice(candidate);
   const kind = candidate.candidateKind === 'promotion' ? '프로모션' : candidate.candidateKind === 'replacement' ? '교체' : '최초';
+  const reviewStatus = candidate.reviewStatus ?? 'pending';
   return (
     <article className={`candidate-card ${lowest ? 'lowest-candidate' : ''}`}>
       <div className="candidate-head"><div><span className="market-pill" style={{ borderColor: source?.accent }}>{source?.label ?? candidate.sourceId}</span>{lowest && <span className="lowest-pill">발견 후보 최저 단가</span>}{current && <span className="current-pill">현재 추적 URL</span>}</div><span className={`confidence ${candidate.confidence}`}>신뢰도 {candidate.confidence}</span></div>
       <h4>{candidate.title}</h4><p>{candidate.packageDescription} · {candidate.seller ?? '판매자 확인 필요'}</p>
       <dl><div><dt>배송 포함 단위가</dt><dd>{unitMoney(unitPrice, candidate.quantityUnit)}</dd></div><div><dt>일반 구매 총액</dt><dd>{money(totalPrice)}</dd></div><div><dt>상품가 / 배송비</dt><dd>{money(candidate.observedPrice)} / {candidate.shippingFee == null ? '확인 필요' : money(candidate.shippingFee)}</dd></div><div><dt>총용량</dt><dd>{candidate.totalQuantity}{candidate.quantityUnit}</dd></div><div><dt>후보 유형</dt><dd>{kind}</dd></div><div><dt>근거</dt><dd>{candidate.matchReason}</dd></div></dl>
       <a className="source-link" href={candidate.url} target="_blank" rel="noreferrer">공식 상품 페이지 열기 ↗</a>
-      {candidate.status === 'pending' ? (readOnly ? <span className="decision pending">검토 가능 · 승인은 로컬에서</span> : <div className="candidate-actions"><button disabled={busy} className="approve-button" onClick={() => onDecision(candidate.id, 'approved')}>이 후보 승인</button><button disabled={busy} className="reject-button" onClick={() => onDecision(candidate.id, 'rejected')}>거절</button></div>) : <span className={`decision ${candidate.status}`}>{candidate.status === 'approved' ? '승인됨' : '거절됨'}</span>}
+      <span className={`decision ${reviewStatus}`}>{reviewStatus === 'passed' ? '리뷰 에이전트 검증 통과' : reviewStatus === 'failed' ? `검증 실패${candidate.reviewReason ? ` · ${candidate.reviewReason}` : ''}` : current ? '기존 추적 URL · 자동 검증 대기' : '자동 검증 대기'}</span>
     </article>
   );
 }
@@ -203,20 +209,6 @@ function AdminPage({ onSnapshot }: { onSnapshot: (snapshot: PublicSnapshot) => v
     finally { setBusy(false); }
   }
 
-  async function decide(id: string, decision: 'approved' | 'rejected') {
-    setBusy(true); setNotice('');
-    try { await jsonRequest(`/api/candidates/${id}/decision`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ decision }) }); await refresh(); }
-    catch (error) { setNotice(error instanceof Error ? error.message : '처리하지 못했습니다.'); }
-    finally { setBusy(false); }
-  }
-
-  async function requestResearch(productId: string) {
-    setBusy(true); setNotice('');
-    try { await jsonRequest(`/api/products/${productId}/research`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }); setNotice('다음 수집에서 후보를 다시 조사합니다.'); await refresh(); }
-    catch (error) { setNotice(error instanceof Error ? error.message : '처리하지 못했습니다.'); }
-    finally { setBusy(false); }
-  }
-
   async function importCsv(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setNotice('');
     const file = new FormData(event.currentTarget).get('productsCsv');
@@ -230,21 +222,21 @@ function AdminPage({ onSnapshot }: { onSnapshot: (snapshot: PublicSnapshot) => v
 
   return (
     <main className="admin-page">
-      <section className="admin-heading"><p className="eyebrow">{local === false ? 'PUBLIC REVIEW' : 'LOCAL ADMIN'}</p><h1>{local === false ? '상품 후보 검토' : '상품 관리'}</h1><p>{local === false ? '동일 제품 후보의 구성, 배송 포함 단위가와 원본 URL을 확인합니다.' : '실제 상품 후보를 확인하고 두 판매처 URL을 각각 승인합니다.'}</p></section>
-      {local === false && <section className="readonly-banner"><strong>공개 검토 모드입니다.</strong><p>아래에서 후보 구성과 실제 판매 URL을 모두 확인할 수 있습니다. 승인·거절과 상품 수정은 로컬 관리 서버에서만 가능합니다.</p></section>}
+      <section className="admin-heading"><p className="eyebrow">{local === false ? 'PUBLIC STATUS' : 'LOCAL OPERATIONS'}</p><h1>자동 추적 관리</h1><p>조사 → 에이전트 검증 → 최저가 기록·반영 상태를 확인합니다.</p></section>
+      {local === false && <section className="readonly-banner"><strong>공개 추적 현황입니다.</strong><p>후보 구성, 단위가, 검증 상태와 실제 판매 URL을 확인할 수 있습니다. 링크 선택과 가격 반영은 리뷰 에이전트가 자동 처리합니다.</p></section>}
       {local === null && <section className="readonly-banner"><p>로컬 관리 기능을 확인하고 있습니다.</p></section>}
       {local && state && <>
         <section className="csv-panel">
-          <div><p className="eyebrow">CSV WORKFLOW</p><h2>표로 한꺼번에 관리</h2><p>상품 CSV를 내려받아 수정한 뒤 다시 가져오세요. 승인 URL은 읽기 전용이며 새 상품은 ID를 비워 둡니다.</p><div className="csv-links"><a className="csv-link" href={`${import.meta.env.BASE_URL}data/products.csv`} download>상품 목록 CSV ↓</a><a className="csv-link" href={`${import.meta.env.BASE_URL}data/latest-prices.csv`} download>최신 가격 CSV ↓</a></div></div>
+          <div><p className="eyebrow">CSV WORKFLOW</p><h2>표로 한꺼번에 관리</h2><p>상품 CSV를 내려받아 수정한 뒤 다시 가져오세요. 현재 추적 URL은 확인용이며 새 상품은 ID를 비워 둡니다.</p><div className="csv-links"><a className="csv-link" href={`${import.meta.env.BASE_URL}data/products.csv`} download>상품 목록 CSV ↓</a><a className="csv-link" href={`${import.meta.env.BASE_URL}data/latest-prices.csv`} download>최신 가격 CSV ↓</a></div></div>
           <form className="csv-import" onSubmit={importCsv}><label>수정한 상품 CSV<input name="productsCsv" type="file" accept=".csv,text/csv" required /></label><button className="primary-button" disabled={busy}>검증 후 가져오기</button></form>
         </section>
         <section className="admin-grid">
           <form className="product-form" onSubmit={submitProduct}><p className="eyebrow">NEW RESEARCH REQUEST</p><h2>새 화장품 등록</h2><label>브랜드<input name="brand" required maxLength={80} placeholder="예: 라운드랩" /></label><label>상품명<input name="name" required maxLength={160} placeholder="예: 자작나무 수분 크림" /></label><div className="field-row"><label>기준 용량<input name="capacity" required maxLength={80} placeholder="예: 80ml" /></label><label>단위<select name="comparisonUnit" required defaultValue="ml"><option value="ml">ml</option><option value="g">g</option></select></label></div><label>색상·구성<input name="variant" maxLength={120} placeholder="예: 판매 구성별 총용량 환산" /></label><button className="primary-button form-submit" disabled={busy}>조사 대기에 추가</button></form>
-          <aside className="admin-guide"><span>01</span><h3>상품 등록</h3><p>브랜드와 정확한 용량·구성을 적습니다.</p><span>02</span><h3>에이전트 조사</h3><p>매일 9시 두 판매처의 실제 후보를 찾습니다.</p><span>03</span><h3>URL 승인</h3><p>두 후보를 승인하면 가격 추적이 시작됩니다.</p></aside>
+          <aside className="admin-guide"><span>01</span><h3>상품 등록</h3><p>브랜드와 정확한 용량·구성을 적습니다.</p><span>02</span><h3>판매처 조사</h3><p>매일 9시 두 조사 에이전트가 실제 후보를 찾습니다.</p><span>03</span><h3>검증·자동 반영</h3><p>리뷰 에이전트를 통과한 최저 단가 링크를 기록합니다.</p></aside>
         </section>
         {notice && <p className="notice" role="status">{notice}</p>}
       </>}
-      {state && <section className="review-section"><div className="board-heading"><div><p className="eyebrow">CANDIDATE REVIEW</p><h2>후보 검토</h2></div><span>{state.candidates.filter((item) => item.status === 'pending').length}개 승인 대기</span></div>
+      {state && <section className="review-section"><div className="board-heading"><div><p className="eyebrow">TRACKING PIPELINE</p><h2>조사·검증 상태</h2></div><span>{state.candidates.filter((item) => (item.reviewStatus ?? 'pending') === 'pending' && item.status !== 'rejected').length}개 자동 검증 대기</span></div>
         {state.products.map((product) => {
           const candidates = state.candidates.filter((item) => item.productId === product.id).sort((left, right) => {
             if (left.sourceId !== right.sourceId) return left.sourceId.localeCompare(right.sourceId);
@@ -256,7 +248,7 @@ function AdminPage({ onSnapshot }: { onSnapshot: (snapshot: PublicSnapshot) => v
             const minimum = Math.min(...priced.map((item) => item.price));
             return priced.filter((item) => item.price === minimum).map((item) => item.id);
           }));
-          return <div className="review-group" key={product.id}><div className="review-title"><div><span>{product.brand}</span><h3>{product.name} {product.capacity}</h3><p>{product.variant || '기본 구성'} · {product.comparisonUnit} 단위 비교 · 상태 {product.status}</p></div>{local && <button className="text-button" disabled={busy} onClick={() => requestResearch(product.id)}>재조사 요청</button>}</div><div className="candidate-grid">{candidates.length ? candidates.map((candidate) => <CandidateCard key={candidate.id} candidate={candidate} source={state.sources.find((source) => source.id === candidate.sourceId)} onDecision={decide} busy={busy} readOnly={!local} lowest={lowestIds.has(candidate.id)} current={product.markets[candidate.sourceId]?.approvedUrl === candidate.url} />) : <p className="candidate-empty">다음 스케줄에서 실제 판매처 후보를 조사합니다.</p>}</div></div>;
+          return <div className="review-group" key={product.id}><div className="review-title"><div><span>{product.brand}</span><h3>{product.name} {product.capacity}</h3><p>{product.variant || '기본 구성'} · {product.comparisonUnit} 단위 비교 · 상태 {product.status}</p></div></div><div className="candidate-grid">{candidates.length ? candidates.map((candidate) => <CandidateCard key={candidate.id} candidate={candidate} source={state.sources.find((source) => source.id === candidate.sourceId)} lowest={lowestIds.has(candidate.id)} current={product.markets[candidate.sourceId]?.approvedUrl === candidate.url} />) : <p className="candidate-empty">다음 스케줄에서 실제 판매처 후보를 조사합니다.</p>}</div></div>;
         })}
       </section>}
     </main>

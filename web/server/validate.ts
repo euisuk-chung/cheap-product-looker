@@ -8,6 +8,7 @@ const snapshotSchema = z.object({
   generatedAt: z.string().datetime({ offset: true }),
   activeProductCount: z.number().int().nonnegative(),
   pendingProductCount: z.number().int().nonnegative(),
+  pendingReviewCount: z.number().int().nonnegative(),
   latestSuccessfulRunAt: z.string().datetime({ offset: true }).nullable(),
   sources: z.array(z.unknown()),
   products: z.array(z.unknown()),
@@ -30,7 +31,7 @@ for (const observation of store.observations) {
 }
 const diskSnapshot = snapshotSchema.parse(JSON.parse(await readFile(path.join(dataDirectory, 'snapshot.json'), 'utf8')));
 const computed = makeSnapshot(store);
-if (diskSnapshot.activeProductCount !== computed.activeProductCount || diskSnapshot.pendingProductCount !== computed.pendingProductCount) {
+if (diskSnapshot.activeProductCount !== computed.activeProductCount || diskSnapshot.pendingProductCount !== computed.pendingProductCount || diskSnapshot.pendingReviewCount !== computed.pendingReviewCount) {
   throw new Error('snapshot.json is stale. Run npm run data:rebuild.');
 }
 const [diskProductsCsv, diskLatestPricesCsv] = await Promise.all([

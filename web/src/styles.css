@@ -48,6 +48,10 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .product-info h3 { margin: 0 0 7px; font-size: 23px; }
 .product-info > span, .muted { color: #777b72; font-size: 12px; }
 .text-link { display: block; margin-top: 25px; color: #52634d; font-size: 12px; font-weight: 600; }
+.best-buy-button { display: grid; gap: 5px; margin-top: 22px; padding: 13px 14px; color: #fff; background: #26382a; border-radius: 3px; }
+.best-buy-button span { font-size: 10px; color: #c7d2c4; }
+.best-buy-button strong { font: 500 18px/1.2 'DM Mono', monospace; }
+.best-buy-button small { font-size: 10px; color: #aeb9aa; }
 .market-grid { display: grid; grid-template-columns: repeat(2, 1fr); border: 1px solid #d8d4ca; }
 .market-price { padding: 20px; min-height: 128px; background: #f9f7f1; }
 .market-price + .market-price { border-left: 1px solid #d8d4ca; }
@@ -59,6 +63,7 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .price-parts, .data-status { display: block; color: #7e8278; font-size: 10px; line-height: 1.6; }
 .data-status { margin-top: 7px; color: #65765f; }
 .data-status.stale { color: #a05035; }
+.market-buy-link { display: inline-block; margin-top: 9px; color: #52634d; font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
 .difference { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
 .difference span { color: #7e8278; font-size: 11px; }
 .difference strong { margin-top: 8px; font: 500 20px/1 'DM Mono', monospace; }
@@ -130,7 +135,7 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .candidate-actions button { padding: 10px 13px; border-radius: 2px; font-size: 11px; }
 .approve-button { color: #fff; border: 1px solid #26382a; background: #26382a; }
 .reject-button { color: #686d63; border: 1px solid #bcb8ad; background: transparent; }
-.decision { display: block; margin-top: 18px; font-size: 11px; }.decision.approved { color: #527149; }.decision.rejected { color: #a05035; }.decision.pending { color: #97683e; }
+.decision { display: block; margin-top: 18px; font-size: 11px; }.decision.passed { color: #527149; }.decision.failed { color: #a05035; }.decision.pending { color: #97683e; }
 .candidate-empty { grid-column: 1 / -1; padding: 30px; border: 1px dashed #bcb8ad; color: #7e8278; text-align: center; font-size: 12px; }
 footer { width: min(1180px, calc(100% - 44px)); margin: 0 auto; padding: 26px 0 42px; display: flex; justify-content: space-between; color: #878b82; font-size: 11px; }
 @media (max-width: 900px) { .product-card { grid-template-columns: 1fr; } .difference { flex-direction: row; align-items: center; justify-content: space-between; } }

@@ -97,6 +97,7 @@ function latestBySource(observations: PriceObservation[]) {
 export function makeSnapshot(input: {
   sources: Source[];
   products: Product[];
+  candidates: MarketCandidate[];
   observations: PriceObservation[];
   runs: CollectionRun[];
 }): PublicSnapshot {
@@ -107,13 +108,24 @@ export function makeSnapshot(input: {
     const comparable = Object.values(latest).filter((item) => item?.isFresh && item.comparable && item.stockStatus === 'in_stock' && item.unitPrice !== null && item.quantityUnit === product.comparisonUnit);
     const minimum = comparable.length ? Math.min(...comparable.map((item) => item.unitPrice as number)) : null;
     const winnerSourceIds = minimum === null ? [] : comparable.filter((item) => item.unitPrice === minimum).map((item) => item.sourceId);
-    return { ...product, latestBySource: latest, winnerSourceIds, history };
+    const observationPurchases = Object.values(latest).filter((item) => item?.comparable && item.stockStatus === 'in_stock' && item.totalPrice !== null && item.unitPrice !== null && item.quantityUnit === product.comparisonUnit).map((item) => ({
+      sourceId: item.sourceId, url: item.sourceUrl, totalPrice: item.totalPrice as number, unitPrice: item.unitPrice as number,
+      quantityUnit: item.quantityUnit, checkedAt: item.capturedAt, isFresh: item.isFresh, basis: 'observation' as const,
+    }));
+    const candidatePurchases = input.candidates.filter((candidate) => candidate.productId === product.id && candidate.status === 'approved' && product.markets[candidate.sourceId]?.approvedUrl === candidate.url && candidate.stockStatus === 'in_stock' && candidate.observedPrice !== null && candidate.shippingFee !== null && candidate.quantityUnit === product.comparisonUnit).map((candidate) => ({
+      sourceId: candidate.sourceId, url: candidate.url, totalPrice: (candidate.observedPrice as number) + (candidate.shippingFee as number), unitPrice: ((candidate.observedPrice as number) + (candidate.shippingFee as number)) / candidate.totalQuantity,
+      quantityUnit: candidate.quantityUnit, checkedAt: candidate.reviewedAt ?? candidate.discoveredAt, isFresh: Date.now() - Date.parse(candidate.reviewedAt ?? candidate.discoveredAt) <= 36 * 60 * 60 * 1000, basis: 'candidate' as const,
+    }));
+    const purchasePool = observationPurchases.some((item) => item.isFresh) ? observationPurchases.filter((item) => item.isFresh) : observationPurchases.length ? observationPurchases : candidatePurchases;
+    const bestPurchase = purchasePool.sort((left, right) => left.unitPrice - right.unitPrice)[0] ?? null;
+    return { ...product, latestBySource: latest, winnerSourceIds, history, bestPurchase };
   });
   const successfulRuns = input.runs.filter((run) => run.sourceResults.some((result) => result.status === 'succeeded'));
   return {
     generatedAt: new Date().toISOString(),
     activeProductCount: activeProducts.length,
     pendingProductCount: input.products.filter((product) => product.status === 'pending').length,
+    pendingReviewCount: input.candidates.filter((candidate) => candidate.reviewStatus === 'pending' && candidate.status !== 'rejected').length,
     latestSuccessfulRunAt: successfulRuns.at(-1)?.finishedAt ?? null,
     sources: input.sources,
     products,

@@ -1,7 +1,8 @@
 {
-  "generatedAt": "2026-08-30T01:42:39.463Z",
+  "generatedAt": "2026-08-30T02:11:08.155Z",
   "activeProductCount": 2,
   "pendingProductCount": 0,
+  "pendingReviewCount": 14,
   "latestSuccessfulRunAt": "2026-08-30T09:22:52.3644115+09:00",
   "sources": [
     {
@@ -78,7 +79,17 @@
       },
       "latestBySource": {},
       "winnerSourceIds": [],
-      "history": []
+      "history": [],
+      "bestPurchase": {
+        "sourceId": "coupang",
+        "url": "https://www.coupang.com/vp/products/9304260213?itemId=26928363554&vendorItemId=95092672666",
+        "totalPrice": 23900,
+        "unitPrice": 49.791666666666664,
+        "quantityUnit": "g",
+        "checkedAt": "2026-08-30T10:38:19+09:00",
+        "isFresh": true,
+        "basis": "candidate"
+      }
     },
     {
       "id": "d8739050-fab8-4e02-b86f-81f0b42d95ab",
@@ -133,7 +144,17 @@
       },
       "latestBySource": {},
       "winnerSourceIds": [],
-      "history": []
+      "history": [],
+      "bestPurchase": {
+        "sourceId": "oliveyoung",
+        "url": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000255244",
+        "totalPrice": 27030,
+        "unitPrice": 135.15,
+        "quantityUnit": "ml",
+        "checkedAt": "2026-08-30T10:37:34+09:00",
+        "isFresh": true,
+        "basis": "candidate"
+      }
     }
   ],
   "runs": [
@@ -155,6 +176,7 @@
           "error": null
         }
       ],
+      "reviewResult": null,
       "validationErrors": [],
       "publishStatus": "succeeded"
     },
@@ -176,6 +198,7 @@
           "error": null
         }
       ],
+      "reviewResult": null,
       "validationErrors": [],
       "publishStatus": "not_requested"
     }

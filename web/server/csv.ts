@@ -102,7 +102,7 @@ export function importProductsCsv(content: string, currentProducts: Product[]) {
     const current = currentById.get(row.id);
     if (!current) throw new Error(`알 수 없는 상품 ID입니다: ${row.id}. 새 상품은 id를 비워 주세요.`);
     if (row.status === 'active' && (!current.markets.coupang || !current.markets.oliveyoung)) {
-      throw new Error(`두 판매처가 승인되지 않은 상품은 활성화할 수 없습니다: ${row.id}`);
+      throw new Error(`두 판매처의 검증된 매핑이 없는 상품은 활성화할 수 없습니다: ${row.id}`);
     }
     return productSchema.parse({
       ...current,

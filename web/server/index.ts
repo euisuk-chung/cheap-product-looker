@@ -1,8 +1,8 @@
 import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { sourceIdSchema, productSchema, quantityUnitSchema } from '../src/lib/schema.ts';
-import { loadStore, rebuildSnapshot, saveCandidates, saveProducts } from './store.ts';
+import { productSchema, quantityUnitSchema } from '../src/lib/schema.ts';
+import { loadStore, rebuildSnapshot, saveProducts } from './store.ts';
 import { importProductsCsv } from './csv.ts';
 
 const app = express();
@@ -63,71 +63,6 @@ app.post('/api/products', async (request, response, next) => {
   } catch (error) { next(error); }
 });
 
-const decisionSchema = z.object({ decision: z.enum(['approved', 'rejected']) });
-
-app.post('/api/candidates/:candidateId/decision', async (request, response, next) => {
-  try {
-    const { decision } = decisionSchema.parse(request.body);
-    const store = await loadStore();
-    const candidate = store.candidates.find((item) => item.id === request.params.candidateId);
-    if (!candidate) return response.status(404).json({ message: '후보를 찾을 수 없습니다.' });
-    const product = store.products.find((item) => item.id === candidate.productId);
-    if (!product) return response.status(404).json({ message: '상품을 찾을 수 없습니다.' });
-
-    const timestamp = new Date().toISOString();
-    const candidates = store.candidates.map((item) => {
-      if (item.id === candidate.id) return { ...item, status: decision };
-      if (decision === 'approved' && item.productId === candidate.productId && item.sourceId === candidate.sourceId && item.status === 'pending') return { ...item, status: 'rejected' as const };
-      return item;
-    });
-
-    const products = store.products.map((item) => {
-      if (item.id !== product.id || decision !== 'approved') return item;
-      const markets = {
-        ...item.markets,
-        [candidate.sourceId]: {
-          sourceId: candidate.sourceId,
-          approvedUrl: candidate.url,
-          productTitle: candidate.title,
-          seller: candidate.seller,
-          packageDescription: candidate.packageDescription,
-          totalQuantity: candidate.totalQuantity,
-          quantityUnit: candidate.quantityUnit,
-          approvedAt: timestamp,
-        },
-      };
-      const ready = store.sources.every((source) => Boolean(markets[source.id]));
-      return { ...item, markets, status: ready ? 'active' as const : 'pending' as const, updatedAt: timestamp };
-    });
-
-    await Promise.all([saveCandidates(candidates), saveProducts(products)]);
-    await rebuildSnapshot();
-    response.json({ candidateId: candidate.id, decision });
-  } catch (error) { next(error); }
-});
-
-const researchSchema = z.object({ sourceId: sourceIdSchema.optional() });
-
-app.post('/api/products/:productId/research', async (request, response, next) => {
-  try {
-    const { sourceId } = researchSchema.parse(request.body ?? {});
-    const store = await loadStore();
-    if (!store.products.some((item) => item.id === request.params.productId)) return response.status(404).json({ message: '상품을 찾을 수 없습니다.' });
-    const timestamp = new Date().toISOString();
-    const products = store.products.map((item) => {
-      if (item.id !== request.params.productId) return item;
-      const markets = { ...item.markets };
-      if (sourceId) delete markets[sourceId];
-      else for (const key of Object.keys(markets)) delete markets[key];
-      return { ...item, markets, status: 'pending' as const, updatedAt: timestamp };
-    });
-    const candidates = store.candidates.map((item) => item.productId === request.params.productId && (!sourceId || item.sourceId === sourceId) ? { ...item, status: 'rejected' as const } : item);
-    await Promise.all([saveProducts(products), saveCandidates(candidates)]);
-    await rebuildSnapshot();
-    response.json({ productId: request.params.productId, sourceId: sourceId ?? 'all', status: 'pending' });
-  } catch (error) { next(error); }
-});
-
 const statusSchema = z.object({ status: z.enum(['active', 'paused']) });
 
 app.patch('/api/products/:productId/status', async (request, response, next) => {
@@ -136,7 +71,7 @@ app.patch('/api/products/:productId/status', async (request, response, next) => 
     const store = await loadStore();
     const product = store.products.find((item) => item.id === request.params.productId);
     if (!product) return response.status(404).json({ message: '상품을 찾을 수 없습니다.' });
-    if (status === 'active' && !store.sources.every((source) => Boolean(product.markets[source.id]))) return response.status(409).json({ message: '두 판매처 후보를 모두 승인해야 활성화할 수 있습니다.' });
+    if (status === 'active' && !store.sources.every((source) => Boolean(product.markets[source.id]))) return response.status(409).json({ message: '두 판매처의 검증된 매핑이 있어야 활성화할 수 있습니다.' });
     const products = store.products.map((item) => item.id === product.id ? { ...item, status, updatedAt: new Date().toISOString() } : item);
     await saveProducts(products);
     await rebuildSnapshot();

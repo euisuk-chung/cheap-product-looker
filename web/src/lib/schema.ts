@@ -65,6 +65,18 @@ export const candidateSchema = z.object({
   candidateKind: z.enum(['initial', 'replacement', 'promotion']),
   replacesUrl: z.string().url().nullable(),
   status: z.enum(['pending', 'approved', 'rejected']),
+  reviewStatus: z.enum(['pending', 'passed', 'failed']).default('pending'),
+  reviewedAt: isoDateSchema.nullable().default(null),
+  reviewedBy: z.literal('price_candidate_reviewer').nullable().default(null),
+  reviewReason: z.string().min(1).nullable().default(null),
+});
+
+export const candidateReviewSchema = z.object({
+  candidateId: z.string().uuid(),
+  decision: z.enum(['passed', 'failed']),
+  reason: z.string().min(1),
+  reviewedAt: isoDateSchema,
+  reviewer: z.literal('price_candidate_reviewer'),
 });
 
 export const observationSchema = z.object({
@@ -117,6 +129,12 @@ export const runSchema = z.object({
   startedAt: isoDateSchema,
   finishedAt: isoDateSchema,
   sourceResults: z.array(sourceResultSchema).length(2),
+  reviewResult: z.object({
+    status: z.enum(['succeeded', 'failed']),
+    reviewedCount: z.number().int().nonnegative(),
+    passedCount: z.number().int().nonnegative(),
+    error: z.string().min(1).nullable(),
+  }).nullable().default(null),
   validationErrors: z.array(z.string()),
   publishStatus: z.enum(['not_requested', 'pending', 'succeeded', 'failed']),
 });
@@ -124,6 +142,7 @@ export const runSchema = z.object({
 export const collectorPayloadSchema = z.object({
   run: runSchema,
   candidates: z.array(candidateSchema).default([]),
+  reviews: z.array(candidateReviewSchema).default([]),
   observations: z.array(observationSchema).default([]),
 });
 
@@ -138,6 +157,7 @@ export type QuantityUnit = z.infer<typeof quantityUnitSchema>;
 export type Source = z.infer<typeof sourceSchema>;
 export type Product = z.infer<typeof productSchema>;
 export type MarketCandidate = z.infer<typeof candidateSchema>;
+export type CandidateReview = z.infer<typeof candidateReviewSchema>;
 export type PriceObservation = z.infer<typeof observationSchema>;
 export type CollectionRun = z.infer<typeof runSchema>;
 export type CollectorPayload = z.infer<typeof collectorPayloadSchema>;
@@ -146,12 +166,23 @@ export type ProductSnapshot = Product & {
   latestBySource: Partial<Record<SourceId, PriceObservation & { isFresh: boolean }>>;
   winnerSourceIds: SourceId[];
   history: PriceObservation[];
+  bestPurchase: {
+    sourceId: SourceId;
+    url: string;
+    totalPrice: number;
+    unitPrice: number;
+    quantityUnit: QuantityUnit;
+    checkedAt: string;
+    isFresh: boolean;
+    basis: 'observation' | 'candidate';
+  } | null;
 };
 
 export type PublicSnapshot = {
   generatedAt: string;
   activeProductCount: number;
   pendingProductCount: number;
+  pendingReviewCount: number;
   latestSuccessfulRunAt: string | null;
   sources: Source[];
   products: ProductSnapshot[];

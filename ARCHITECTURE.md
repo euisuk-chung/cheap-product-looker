@@ -6,7 +6,7 @@
 
 - 가격, 배송비, 재고와 상품 후보는 쿠팡·올리브영의 실제 공개 페이지에서 확인한 값만 저장한다.
 - Mock, fixture, 예시 가격과 추정값을 운영 및 검증 데이터로 사용하지 않는다.
-- 상품 후보는 자동 승인하지 않는다. 공개 Pages에서 후보를 검토하고 로컬에서 승인한 판매처 URL만 가격을 추적한다.
+- 조사 결과는 독립 리뷰 에이전트가 검증하며, 통과한 판매처별 최저 단가 URL을 자동 추적한다.
 - JSON·JSONL을 정규 데이터로 사용하고 CSV와 공개 스냅샷은 정규 데이터에서 생성한다.
 - GitHub Pages는 읽기 전용이다. 쓰기 기능은 `127.0.0.1`에 바인딩된 로컬 관리 서버에서만 제공한다.
 - 한 판매처의 수집 실패가 다른 판매처의 정상 결과 저장을 막지 않는다.
@@ -15,7 +15,7 @@
 
 ```mermaid
 flowchart LR
-    User[로컬 사용자] -->|상품 등록·후보 승인| AdminUI[React 관리 화면]
+    User[로컬 사용자] -->|추적 상품 등록| AdminUI[React 관리 화면]
     AdminUI -->|/api| AdminAPI[Node 로컬 관리 API]
     AdminAPI --> Store[(JSON / JSONL 정규 데이터)]
     User -->|CSV 수정·가져오기| AdminUI
@@ -59,8 +59,7 @@ flowchart LR
 - 개발 UI: `127.0.0.1:5173`
 - 역할:
   - 조사 대기 상품 등록
-  - 후보 승인·거절
-  - 재조사 요청
+  - 조사·리뷰 상태 확인
   - 상품 상태 변경
   - 상품 CSV 검증 및 가져오기
 
@@ -70,13 +69,14 @@ Vite 개발 서버는 `/api` 요청만 로컬 관리 서버로 프록시한다. 
 
 Codex 앱에 저장된 활성 스케줄이 매일 오전 9시(Asia/Seoul)에 실행된다. 스케줄 정의는 저장소 코드가 아니라 Codex 로컬 프로젝트 설정에 존재한다.
 
-한 번의 실행은 정확히 두 서브에이전트를 병렬로 사용한다.
+한 번의 실행은 두 조사 에이전트를 병렬로 사용한 뒤 리뷰 에이전트를 순차 실행한다.
 
 1. 쿠팡 에이전트가 승인 URL을 관측하고 모든 상품의 검색 하네스로 접근 가능한 동일 제품 후보를 모두 탐색한다.
 2. 올리브영 에이전트가 승인 URL을 관측하고 모든 상품의 검색 하네스로 접근 가능한 동일 제품 후보를 모두 탐색한다.
-3. 코디네이터가 두 결과를 병합하고 `collectorPayloadSchema`로 검증한다.
-4. `web/server/import-run.ts`가 검증된 후보·관측·실행 결과만 저장한다.
-5. lint와 프로덕션 빌드가 성공하면 데이터 파일만 커밋해 `main`에 push한다.
+3. `price_candidate_reviewer`가 두 결과의 동일 제품·배송비·재고·단위가 근거를 독립 검증한다.
+4. 코디네이터가 리뷰 통과 결과를 병합하고 `collectorPayloadSchema`로 검증한다.
+5. `web/server/import-run.ts`가 판매처별 최저 통과 후보를 자동 매핑하고 선택된 관측만 저장한다.
+6. lint와 프로덕션 빌드가 성공하면 데이터 파일만 커밋해 `main`에 push한다.
 
 서브에이전트는 파일을 수정하지 않으며 로그인, CAPTCHA 또는 접근 차단을 우회하지 않는다. 상세 계약은 `docs/collector-contract.md`에 정의한다.
 
@@ -87,8 +87,8 @@ Codex 앱에 저장된 활성 스케줄이 매일 오전 9시(Asia/Seoul)에 실
 | 파일 | 형식 | 역할 | 쓰기 방식 |
 |---|---|---|---|
 | `sources.json` | JSON | 판매처 ID, 표시명, 허용 호스트 | 수동 관리 |
-| `products.json` | JSON | 상품 정보, 상태, 승인된 판매처 매핑 | 관리 API·CSV 가져오기 |
-| `candidates.json` | JSON | 실제 상품 후보와 승인 상태 | 수집 가져오기·관리 API |
+| `products.json` | JSON | 상품 정보, 상태, 검증된 현재 판매처 매핑 | 관리 API·수집 가져오기 |
+| `candidates.json` | JSON | 실제 상품 후보와 에이전트 리뷰 상태 | 수집 가져오기 |
 | `observations.jsonl` | JSONL | 가격 관측 이력 | 논리적 append-only |
 | `runs.jsonl` | JSONL | 수집 실행과 배포 상태 | 논리적 append-only |
 
@@ -105,10 +105,10 @@ Codex 앱에 저장된 활성 스케줄이 매일 오전 9시(Asia/Seoul)에 실
 `products.csv`는 관리 편의를 위한 양방향 투영이다. CSV를 가져오면 다음 규칙을 적용한 후 `products.json`을 다시 생성한다.
 
 - 기존 상품은 ID로 식별하고 브랜드·상품명·용량·구성·상태만 갱신한다.
-- 판매처 URL 열은 확인용이며 CSV 가져오기로 승인 매핑을 만들거나 변경하지 않는다.
+- 판매처 URL 열은 확인용이며 CSV 가져오기로 검증 매핑을 만들거나 변경하지 않는다.
 - ID가 빈 새 행은 새 UUID를 발급하고 항상 `pending` 상태로 생성한다.
 - CSV에서 빠진 기존 상품은 삭제하지 않고 보존한다.
-- 두 판매처 매핑이 모두 승인되지 않은 상품은 `active`로 변경할 수 없다.
+- 두 판매처의 검증 매핑이 모두 없는 상품은 `active`로 변경할 수 없다.
 
 `latest-prices.csv`는 출력 전용이다. 가격을 CSV에 직접 입력하거나 이를 가격 원본으로 가져오는 경로는 없다.
 
@@ -116,15 +116,15 @@ Codex 앱에 저장된 활성 스케줄이 매일 오전 9시(Asia/Seoul)에 실
 
 ### Product
 
-표준 상품 정보와 상태, 판매처별 승인 매핑을 가진다.
+표준 상품 정보와 상태, 판매처별 검증 매핑을 가진다.
 
 - 상태: `pending` → `active` 또는 `paused`
-- `active` 조건: 쿠팡과 올리브영 매핑이 모두 승인됨
-- 판매처 매핑: 승인 URL, 실제 페이지 제목, 판매자, 구성, 승인 시각
+- `active` 조건: 쿠팡과 올리브영의 검증 매핑이 모두 존재
+- 판매처 매핑: 리뷰 통과 URL, 실제 페이지 제목, 판매자, 구성, 검증 시각
 
 ### MarketCandidate
 
-에이전트가 실제 페이지에서 발견한 승인 전 후보다. URL, 실제 제목, 판매자, 구성, 총용량, 동일상품 판단 근거, 후보 유형과 발견 시각을 포함한다. 검토 화면은 재고가 있고 배송비를 확정한 후보를 판매처별 배송 포함 단위가 순으로 정렬하고, 최저 단가 후보와 현재 추적 URL을 구분한다.
+조사 에이전트가 실제 페이지에서 발견한 후보다. URL, 실제 제목, 판매자, 구성, 총용량, 동일상품 판단 근거, 후보 유형, 발견 시각과 리뷰 결과를 포함한다. 현황 화면은 후보를 판매처별 배송 포함 단위가 순으로 정렬하고, 조사·리뷰 상태와 현재 추적 URL을 구분한다.
 
 ### PriceObservation
 
@@ -150,16 +150,16 @@ Codex 앱에 저장된 활성 스케줄이 매일 오전 9시(Asia/Seoul)에 실
 
 ## 주요 처리 흐름
 
-### 상품 등록과 승인
+### 상품 등록과 자동 검증
 
 ```mermaid
 stateDiagram-v2
     [*] --> pending: UI 또는 빈 ID CSV 행 등록
-    pending --> pending: 후보 조사·부분 승인
-    pending --> active: 두 판매처 후보 승인
+    pending --> pending: 후보 조사·리뷰 보류
+    pending --> active: 두 판매처 검증 매핑 생성
     active --> pending: 재조사 요청
     active --> paused: 추적 일시 중지
-    paused --> active: 승인 매핑 유지 + 재활성화
+    paused --> active: 검증 매핑 유지 + 재활성화
 ```
 
 ### 가격 수집과 게시
@@ -170,6 +170,7 @@ sequenceDiagram
     participant C as Coordinator
     participant CA as Coupang Agent
     participant OA as OliveYoung Agent
+    participant R as Review Agent
     participant D as Data Store
     participant G as GitHub Actions
 
@@ -180,7 +181,9 @@ sequenceDiagram
     end
     CA-->>C: 후보·관측 또는 실패
     OA-->>C: 후보·관측 또는 실패
-    C->>C: Zod 검증 및 승인 URL 일치 확인
+    C->>R: 두 조사 결과와 근거 전달
+    R-->>C: 후보별 통과·실패와 이유
+    C->>C: 최저 통과 후보 선택·Zod 검증
     C->>D: JSON·JSONL 저장
     C->>D: snapshot.json과 CSV 재생성
     C->>C: lint·build
@@ -193,7 +196,7 @@ sequenceDiagram
 
 1. 입력 검증: API 및 CSV 입력을 Zod로 검증한다.
 2. 관계 검증: 후보·관측의 상품 ID와 실행 ID가 실제 정규 데이터에 존재하는지 확인한다.
-3. URL 검증: 판매처 허용 호스트와 승인 상품 URL이 관측 URL에 일치하는지 확인한다.
+3. URL 검증: 판매처 허용 호스트와 리뷰를 통과한 현재 매핑이 관측 URL에 일치하는지 확인한다.
 4. 가격 불변식 검증: 배송비·총액·재고·비교 가능 상태 조합을 검사한다.
 5. 파생 데이터 검증: 스냅샷 집계와 CSV가 정규 데이터에서 다시 계산한 결과와 일치하는지 검사한다.
 6. 빌드 검증: ESLint, TypeScript와 Vite 프로덕션 빌드를 실행한다.
