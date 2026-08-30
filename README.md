@@ -44,6 +44,15 @@ npm run build
 
 가격과 후보 파일을 직접 수정할 때도 반드시 `npm run data:validate`를 통과해야 합니다. 자동 수집의 상세 규칙은 [collector-contract.md](docs/collector-contract.md)를 따릅니다.
 
+## Codex 서브에이전트 공유
+
+프로젝트 전용 에이전트 설정은 `.codex/agents/`에 저장합니다.
+
+- `coupang_price_tracker`: 쿠팡 승인 URL 관측 및 복수 후보 검색
+- `oliveyoung_price_tracker`: 올리브영 승인 URL 관측 및 복수 후보 검색
+
+두 파일은 가격·상품·URL을 고정하지 않고 실행 시점의 `products.json`과 검색 하네스를 읽습니다. 저장소를 clone한 Codex 클라이언트는 프로젝트 범위의 `.codex/config.toml`과 에이전트 파일을 로드하며, 코디네이터는 두 이름을 명시해 병렬 실행해야 합니다.
+
 ## CSV 관리
 
 - `web/public/data/products.csv`: 상품 목록 관리용입니다. 기존 행의 상품 정보를 수정하거나 ID가 빈 행을 추가한 뒤 로컬 관리 화면에서 가져올 수 있습니다. 판매처 URL 열은 확인용이며 가져오기에서 승인 매핑을 변경하지 않습니다.
