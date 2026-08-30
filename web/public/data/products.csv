@@ -1,4 +1,3 @@
-﻿id,brand,name,capacity,variant,status,coupang_url,oliveyoung_url
-117f3ba4-1c50-417c-b73e-94833829697f,라운드랩,1025 독도 토너,200ml,단품,pending,,
-f064cf6b-b53c-4d33-ac4d-4e61fbef8772,바이오더마,센시비오 H2O,500ml,단품,pending,,
-7336a148-efeb-4914-a936-69525dff4d3d,미샤,4D 마스카라,7g,블랙 단품,pending,,
+﻿id,brand,name,capacity,variant,comparison_unit,status,coupang_url,oliveyoung_url
+44de53ef-8e7d-40d2-a0cf-fe218b1e531c,센카,퍼펙트 휩 페이셜 워시 FA,120g,판매 구성별 총용량 환산,g,active,https://www.coupang.com/vp/products/9304260213?itemId=26928363554&vendorItemId=95092672666,https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000253102
+d8739050-fab8-4e02-b86f-81f0b42d95ab,라운드랩,자작나무 수분 크림,80ml,판매 구성별 총용량 환산,ml,active,https://www.coupang.com/vp/products/1947620463?itemId=15269625446&vendorItemId=95092539774,https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000255244

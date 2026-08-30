@@ -23,8 +23,10 @@ function sameApprovedProduct(approvedUrl: string, observedUrl: string) {
 
 for (const candidate of payload.candidates) {
   if (candidate.status !== 'pending') throw new Error(`Collector candidates must remain pending: ${candidate.id}`);
-  if (!store.products.some((product) => product.id === candidate.productId)) throw new Error(`Unknown product for candidate ${candidate.id}`);
+  const product = store.products.find((item) => item.id === candidate.productId);
+  if (!product) throw new Error(`Unknown product for candidate ${candidate.id}`);
   if (!officialSourceUrl(candidate.url, candidate.sourceId, store.sources)) throw new Error(`Candidate URL is not official: ${candidate.url}`);
+  if (candidate.quantityUnit !== product.comparisonUnit) throw new Error(`Candidate unit does not match product ${candidate.id}`);
 }
 
 for (const observation of payload.observations) {
@@ -34,6 +36,9 @@ for (const observation of payload.observations) {
   if (!mapping) throw new Error(`No approved ${observation.sourceId} mapping for ${observation.productId}`);
   if (!officialSourceUrl(observation.sourceUrl, observation.sourceId, store.sources)) throw new Error(`Observation URL is not official: ${observation.sourceUrl}`);
   if (!sameApprovedProduct(mapping.approvedUrl, observation.sourceUrl)) throw new Error(`Observation does not match the approved product URL: ${observation.sourceUrl}`);
+  if (observation.quantityUnit !== product.comparisonUnit || observation.quantityUnit !== mapping.quantityUnit || observation.totalQuantity !== mapping.totalQuantity) {
+    throw new Error(`Observation quantity does not match the approved package: ${observation.sourceUrl}`);
+  }
 }
 
 const candidates = [...store.candidates];

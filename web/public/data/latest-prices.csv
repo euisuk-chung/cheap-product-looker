@@ -1,1 +1,5 @@
-﻿product_id,brand,name,capacity,variant,source,product_price,shipping_fee,total_price,comparable,stock_status,freshness,is_lowest,captured_at,seller,benefit_note,source_url
+﻿product_id,brand,name,capacity,variant,source,product_price,shipping_fee,total_price,total_quantity,quantity_unit,unit_price,comparable,stock_status,freshness,is_lowest,captured_at,seller,benefit_note,source_url
+44de53ef-8e7d-40d2-a0cf-fe218b1e531c,센카,퍼펙트 휩 페이셜 워시 FA,120g,판매 구성별 총용량 환산,쿠팡,,,,480,g,,,not_collected,not_collected,,,,,https://www.coupang.com/vp/products/9304260213?itemId=26928363554&vendorItemId=95092672666
+44de53ef-8e7d-40d2-a0cf-fe218b1e531c,센카,퍼펙트 휩 페이셜 워시 FA,120g,판매 구성별 총용량 환산,올리브영,,,,360,g,,,not_collected,not_collected,,,,,https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000253102
+d8739050-fab8-4e02-b86f-81f0b42d95ab,라운드랩,자작나무 수분 크림,80ml,판매 구성별 총용량 환산,쿠팡,,,,160,ml,,,not_collected,not_collected,,,,,https://www.coupang.com/vp/products/1947620463?itemId=15269625446&vendorItemId=95092539774
+d8739050-fab8-4e02-b86f-81f0b42d95ab,라운드랩,자작나무 수분 크림,80ml,판매 구성별 총용량 환산,올리브영,,,,200,ml,,,not_collected,not_collected,,,,,https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000255244

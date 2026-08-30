@@ -104,9 +104,9 @@ export function makeSnapshot(input: {
   const products = activeProducts.map((product) => {
     const history = input.observations.filter((item) => item.productId === product.id);
     const latest = latestBySource(history);
-    const comparable = Object.values(latest).filter((item) => item?.isFresh && item.comparable && item.stockStatus === 'in_stock' && item.totalPrice !== null);
-    const minimum = comparable.length ? Math.min(...comparable.map((item) => item.totalPrice as number)) : null;
-    const winnerSourceIds = minimum === null ? [] : comparable.filter((item) => item.totalPrice === minimum).map((item) => item.sourceId);
+    const comparable = Object.values(latest).filter((item) => item?.isFresh && item.comparable && item.stockStatus === 'in_stock' && item.unitPrice !== null && item.quantityUnit === product.comparisonUnit);
+    const minimum = comparable.length ? Math.min(...comparable.map((item) => item.unitPrice as number)) : null;
+    const winnerSourceIds = minimum === null ? [] : comparable.filter((item) => item.unitPrice === minimum).map((item) => item.sourceId);
     return { ...product, latestBySource: latest, winnerSourceIds, history };
   });
   const successfulRuns = input.runs.filter((run) => run.sourceResults.some((result) => result.status === 'succeeded'));

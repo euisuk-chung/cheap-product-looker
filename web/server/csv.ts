@@ -10,6 +10,7 @@ const productCsvRowSchema = z.object({
   name: z.string().trim().min(1).max(160),
   capacity: z.string().trim().min(1).max(80),
   variant: z.string().trim().max(120),
+  comparison_unit: z.enum(['g', 'ml']),
   status: z.enum(['pending', 'active', 'paused']),
   coupang_url: z.string(),
   oliveyoung_url: z.string(),
@@ -28,10 +29,11 @@ export function productsCsv(products: Product[]) {
     name: product.name,
     capacity: product.capacity,
     variant: product.variant,
+    comparison_unit: product.comparisonUnit,
     status: product.status,
     coupang_url: product.markets.coupang?.approvedUrl ?? '',
     oliveyoung_url: product.markets.oliveyoung?.approvedUrl ?? '',
-  })), ['id', 'brand', 'name', 'capacity', 'variant', 'status', 'coupang_url', 'oliveyoung_url']);
+  })), ['id', 'brand', 'name', 'capacity', 'variant', 'comparison_unit', 'status', 'coupang_url', 'oliveyoung_url']);
 }
 
 export function latestPricesCsv(snapshot: PublicSnapshot) {
@@ -47,6 +49,9 @@ export function latestPricesCsv(snapshot: PublicSnapshot) {
       product_price: observation?.productPrice ?? '',
       shipping_fee: observation?.shippingFee ?? '',
       total_price: observation?.totalPrice ?? '',
+      total_quantity: observation?.totalQuantity ?? product.markets[source.id as SourceId]?.totalQuantity ?? '',
+      quantity_unit: observation?.quantityUnit ?? product.comparisonUnit,
+      unit_price: observation?.unitPrice ?? '',
       comparable: observation?.comparable ?? false,
       stock_status: observation?.stockStatus ?? 'not_collected',
       freshness: observation ? (observation.isFresh ? 'fresh' : 'stale') : 'not_collected',
@@ -57,7 +62,7 @@ export function latestPricesCsv(snapshot: PublicSnapshot) {
       source_url: observation?.sourceUrl ?? product.markets[source.id as SourceId]?.approvedUrl ?? '',
     };
   }));
-  return csv(records, ['product_id', 'brand', 'name', 'capacity', 'variant', 'source', 'product_price', 'shipping_fee', 'total_price', 'comparable', 'stock_status', 'freshness', 'is_lowest', 'captured_at', 'seller', 'benefit_note', 'source_url']);
+  return csv(records, ['product_id', 'brand', 'name', 'capacity', 'variant', 'source', 'product_price', 'shipping_fee', 'total_price', 'total_quantity', 'quantity_unit', 'unit_price', 'comparable', 'stock_status', 'freshness', 'is_lowest', 'captured_at', 'seller', 'benefit_note', 'source_url']);
 }
 
 export function importProductsCsv(content: string, currentProducts: Product[]) {
@@ -78,10 +83,18 @@ export function importProductsCsv(content: string, currentProducts: Product[]) {
         name: row.name,
         capacity: row.capacity,
         variant: row.variant,
+        comparisonUnit: row.comparison_unit,
         status: 'pending',
         createdAt: timestamp,
         updatedAt: timestamp,
         markets: {},
+        tracker: {
+          searchQueries: [`${row.brand} ${row.name}`],
+          requiredTerms: [row.brand, row.name],
+          excludedTerms: [],
+          packagePolicy: 'same_product_any_quantity',
+          discoveryPolicy: 'every_run',
+        },
       });
     }
     if (seen.has(row.id)) throw new Error(`CSV에 상품 ID가 중복되었습니다: ${row.id}`);
@@ -97,6 +110,7 @@ export function importProductsCsv(content: string, currentProducts: Product[]) {
       name: row.name,
       capacity: row.capacity,
       variant: row.variant,
+      comparisonUnit: row.comparison_unit,
       status: row.status,
       updatedAt: timestamp,
     });

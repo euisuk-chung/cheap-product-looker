@@ -1,35 +1,82 @@
 [
   {
-    "id": "117f3ba4-1c50-417c-b73e-94833829697f",
+    "id": "44de53ef-8e7d-40d2-a0cf-fe218b1e531c",
+    "brand": "센카",
+    "name": "퍼펙트 휩 페이셜 워시 FA",
+    "capacity": "120g",
+    "variant": "판매 구성별 총용량 환산",
+    "comparisonUnit": "g",
+    "status": "active",
+    "createdAt": "2026-08-30T10:30:53+09:00",
+    "updatedAt": "2026-08-30T10:30:53+09:00",
+    "markets": {
+      "coupang": {
+        "sourceId": "coupang",
+        "approvedUrl": "https://www.coupang.com/vp/products/9304260213?itemId=26928363554&vendorItemId=95092672666",
+        "productTitle": "센카 퍼펙트 휩 페이셜 워시 FA 클렌징폼, 120g, 4개",
+        "seller": "쿠팡",
+        "packageDescription": "120g × 4개 (총 480g)",
+        "totalQuantity": 480,
+        "quantityUnit": "g",
+        "approvedAt": "2026-08-30T10:30:53+09:00"
+      },
+      "oliveyoung": {
+        "sourceId": "oliveyoung",
+        "approvedUrl": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000253102",
+        "productTitle": "[온라인단독/3입] 센카 퍼펙트 휩 페이셜 워시 FA 120g 트리플 기획",
+        "seller": null,
+        "packageDescription": "120g × 3입 (총 360g)",
+        "totalQuantity": 360,
+        "quantityUnit": "g",
+        "approvedAt": "2026-08-30T10:30:53+09:00"
+      }
+    },
+    "tracker": {
+      "searchQueries": ["센카 퍼펙트 휩 페이셜 워시 FA", "센카 퍼펙트 휩 FA 120g"],
+      "requiredTerms": ["센카", "퍼펙트 휩", "FA"],
+      "excludedTerms": ["화이트 클레이", "콜라겐", "아크네", "프레시", "스피디"],
+      "packagePolicy": "same_product_any_quantity",
+      "discoveryPolicy": "every_run"
+    }
+  },
+  {
+    "id": "d8739050-fab8-4e02-b86f-81f0b42d95ab",
     "brand": "라운드랩",
-    "name": "1025 독도 토너",
-    "capacity": "200ml",
-    "variant": "단품",
-    "status": "pending",
-    "createdAt": "2026-08-29T22:02:07+09:00",
-    "updatedAt": "2026-08-29T22:02:07+09:00",
-    "markets": {}
-  },
-  {
-    "id": "f064cf6b-b53c-4d33-ac4d-4e61fbef8772",
-    "brand": "바이오더마",
-    "name": "센시비오 H2O",
-    "capacity": "500ml",
-    "variant": "단품",
-    "status": "pending",
-    "createdAt": "2026-08-29T22:00:26+09:00",
-    "updatedAt": "2026-08-29T22:00:26+09:00",
-    "markets": {}
-  },
-  {
-    "id": "7336a148-efeb-4914-a936-69525dff4d3d",
-    "brand": "미샤",
-    "name": "4D 마스카라",
-    "capacity": "7g",
-    "variant": "블랙 단품",
-    "status": "pending",
-    "createdAt": "2026-08-29T22:00:26+09:00",
-    "updatedAt": "2026-08-29T22:00:26+09:00",
-    "markets": {}
+    "name": "자작나무 수분 크림",
+    "capacity": "80ml",
+    "variant": "판매 구성별 총용량 환산",
+    "comparisonUnit": "ml",
+    "status": "active",
+    "createdAt": "2026-08-30T10:30:53+09:00",
+    "updatedAt": "2026-08-30T10:30:53+09:00",
+    "markets": {
+      "coupang": {
+        "sourceId": "coupang",
+        "approvedUrl": "https://www.coupang.com/vp/products/1947620463?itemId=15269625446&vendorItemId=95092539774",
+        "productTitle": "라운드랩 자작나무 수분 크림, 80ml, 2개",
+        "seller": null,
+        "packageDescription": "80ml × 2개 (총 160ml)",
+        "totalQuantity": 160,
+        "quantityUnit": "ml",
+        "approvedAt": "2026-08-30T10:30:53+09:00"
+      },
+      "oliveyoung": {
+        "sourceId": "oliveyoung",
+        "approvedUrl": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000255244",
+        "productTitle": "[총200ml/미니어처증정] 라운드랩 자작나무 수분 크림 80ml+80ml 더블 기획 (+40ml)",
+        "seller": null,
+        "packageDescription": "본품 80ml × 2 + 미니어처 증정 합계 40ml (총 200ml)",
+        "totalQuantity": 200,
+        "quantityUnit": "ml",
+        "approvedAt": "2026-08-30T10:30:53+09:00"
+      }
+    },
+    "tracker": {
+      "searchQueries": ["라운드랩 자작나무 수분 크림", "라운드랩 자작나무 수분 크림 80ml"],
+      "requiredTerms": ["라운드랩", "자작나무", "수분 크림"],
+      "excludedTerms": ["인텐시브", "선크림", "선스틱", "톤업"],
+      "packagePolicy": "same_product_any_quantity",
+      "discoveryPolicy": "every_run"
+    }
   }
 ]

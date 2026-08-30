@@ -1,7 +1,7 @@
 import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { sourceIdSchema, productSchema } from '../src/lib/schema.ts';
+import { sourceIdSchema, productSchema, quantityUnitSchema } from '../src/lib/schema.ts';
 import { loadStore, rebuildSnapshot, saveCandidates, saveProducts } from './store.ts';
 import { importProductsCsv } from './csv.ts';
 
@@ -34,6 +34,7 @@ const createProductSchema = z.object({
   name: z.string().trim().min(1).max(160),
   capacity: z.string().trim().min(1).max(80),
   variant: z.string().trim().max(120).default(''),
+  comparisonUnit: quantityUnitSchema,
 });
 
 app.post('/api/products', async (request, response, next) => {
@@ -48,6 +49,13 @@ app.post('/api/products', async (request, response, next) => {
       createdAt: timestamp,
       updatedAt: timestamp,
       markets: {},
+      tracker: {
+        searchQueries: [`${input.brand} ${input.name}`],
+        requiredTerms: [input.brand, input.name],
+        excludedTerms: [],
+        packagePolicy: 'same_product_any_quantity',
+        discoveryPolicy: 'every_run',
+      },
     });
     await saveProducts([...store.products, product]);
     await rebuildSnapshot();
@@ -83,6 +91,8 @@ app.post('/api/candidates/:candidateId/decision', async (request, response, next
           productTitle: candidate.title,
           seller: candidate.seller,
           packageDescription: candidate.packageDescription,
+          totalQuantity: candidate.totalQuantity,
+          quantityUnit: candidate.quantityUnit,
           approvedAt: timestamp,
         },
       };

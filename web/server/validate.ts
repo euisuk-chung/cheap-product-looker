@@ -16,13 +16,17 @@ const snapshotSchema = z.object({
 
 const store = await loadStore();
 for (const candidate of store.candidates) {
-  if (!store.products.some((product) => product.id === candidate.productId)) throw new Error(`Unknown product for candidate ${candidate.id}`);
+  const product = store.products.find((item) => item.id === candidate.productId);
+  if (!product) throw new Error(`Unknown product for candidate ${candidate.id}`);
   if (!officialSourceUrl(candidate.url, candidate.sourceId, store.sources)) throw new Error(`Non-official candidate URL: ${candidate.url}`);
+  if (candidate.quantityUnit !== product.comparisonUnit) throw new Error(`Candidate unit does not match product ${candidate.id}`);
 }
 for (const observation of store.observations) {
-  if (!store.products.some((product) => product.id === observation.productId)) throw new Error(`Unknown product for observation ${observation.id}`);
+  const product = store.products.find((item) => item.id === observation.productId);
+  if (!product) throw new Error(`Unknown product for observation ${observation.id}`);
   if (!store.runs.some((run) => run.id === observation.runId)) throw new Error(`Unknown run for observation ${observation.id}`);
   if (!officialSourceUrl(observation.sourceUrl, observation.sourceId, store.sources)) throw new Error(`Non-official observation URL: ${observation.sourceUrl}`);
+  if (observation.quantityUnit !== product.comparisonUnit) throw new Error(`Observation unit does not match product ${observation.id}`);
 }
 const diskSnapshot = snapshotSchema.parse(JSON.parse(await readFile(path.join(dataDirectory, 'snapshot.json'), 'utf8')));
 const computed = makeSnapshot(store);
