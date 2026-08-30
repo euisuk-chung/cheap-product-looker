@@ -75,11 +75,27 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .detail-prices { display: grid; grid-template-columns: repeat(2, 1fr); border: 1px solid #d8d4ca; }
 .history-panel .board-heading { padding-top: 64px; }
 .chart-wrap { padding: 30px 0; }
-.chart-wrap svg { width: 100%; height: 320px; overflow: visible; }
-.grid-line { stroke: #d8d4ca; stroke-width: .5; vector-effect: non-scaling-stroke; }
+.trend-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #d8d4ca; background: #eeeae0; }
+.trend-card { min-width: 0; padding: 18px 20px; }
+.trend-card + .trend-card { border-left: 1px solid #d8d4ca; }
+.trend-card > span { display: flex; align-items: center; gap: 7px; color: #62675d; font-size: 11px; }
+.trend-card i { width: 7px; height: 7px; border-radius: 50%; }
+.trend-card strong { display: block; margin: 12px 0 6px; font: 500 21px/1 'DM Mono', monospace; }
+.trend-card small { color: #717569; font-size: 10px; }
+.trend-card small.rise { color: #a05035; }
+.trend-card small.fall { color: #527149; }
+.chart-canvas { margin-top: 18px; overflow-x: auto; border: 1px solid #d8d4ca; background: #f9f7f1; }
+.chart-canvas svg { display: block; width: 100%; min-width: 620px; height: auto; }
+.grid-line { stroke: #dedad0; stroke-width: 1; }
+.chart-axis-label { fill: #777b72; font: 10px 'DM Mono', monospace; }
+.chart-unit-label { fill: #a05035; font: 500 10px 'DM Mono', monospace; letter-spacing: .06em; }
 .chart-legend { display: flex; justify-content: center; gap: 24px; color: #6e7368; font-size: 11px; }
 .chart-legend span { display: flex; align-items: center; gap: 7px; }
-.chart-empty { min-height: 250px; display: grid; place-items: center; color: #7e8278; border-bottom: 1px solid #d8d4ca; }
+.chart-legend { margin-top: 18px; }
+.chart-note { margin: 12px 0 0; color: #7e8278; font-size: 10px; text-align: center; }
+.chart-empty { min-height: 250px; display: grid; place-items: center; padding: 30px; color: #7e8278; border: 1px dashed #bcb8ad; text-align: center; }
+.chart-empty strong { display: block; color: #3f463c; font-size: 17px; }
+.chart-empty p { max-width: 520px; margin: 10px 0 0; font-size: 12px; line-height: 1.65; }
 .admin-page { padding-top: clamp(52px, 8vw, 90px); }
 .admin-heading { padding-bottom: 46px; border-bottom: 1px solid #bcb8ad; }
 .admin-heading h1 { font-size: clamp(46px, 7vw, 72px); }
@@ -139,5 +155,5 @@ h2, h3, h4 { letter-spacing: -.035em; }
 .candidate-empty { grid-column: 1 / -1; padding: 30px; border: 1px dashed #bcb8ad; color: #7e8278; text-align: center; font-size: 12px; }
 footer { width: min(1180px, calc(100% - 44px)); margin: 0 auto; padding: 26px 0 42px; display: flex; justify-content: space-between; color: #878b82; font-size: 11px; }
 @media (max-width: 900px) { .product-card { grid-template-columns: 1fr; } .difference { flex-direction: row; align-items: center; justify-content: space-between; } }
-@media (max-width: 720px) { nav { gap: 16px; } .nav-link { font-size: 12px; } .hero { grid-template-columns: 1fr; } .hero-seal { display: none; } .summary-grid { grid-template-columns: 1fr 1fr; } .metric-card.wide { grid-column: 1 / -1; border-top: 1px solid #d8d4ca; } .board-heading { align-items: start; gap: 20px; flex-direction: column; } .board-actions { align-items: flex-start; flex-direction: column; gap: 12px; } .market-grid, .detail-prices, .candidate-grid, .admin-grid, .csv-panel { grid-template-columns: 1fr; } .market-price + .market-price { border-left: 0; border-top: 1px solid #d8d4ca; } .admin-guide { display: none; } footer { gap: 12px; flex-direction: column; } }
+@media (max-width: 720px) { nav { gap: 16px; } .nav-link { font-size: 12px; } .hero { grid-template-columns: 1fr; } .hero-seal { display: none; } .summary-grid { grid-template-columns: 1fr 1fr; } .metric-card.wide { grid-column: 1 / -1; border-top: 1px solid #d8d4ca; } .board-heading { align-items: start; gap: 20px; flex-direction: column; } .board-actions { align-items: flex-start; flex-direction: column; gap: 12px; } .market-grid, .detail-prices, .candidate-grid, .admin-grid, .csv-panel, .trend-summary { grid-template-columns: 1fr; } .market-price + .market-price, .trend-card + .trend-card { border-left: 0; border-top: 1px solid #d8d4ca; } .admin-guide { display: none; } footer { gap: 12px; flex-direction: column; } }
 @media (max-width: 460px) { .topbar { height: auto; padding-top: 14px; align-items: flex-start; flex-direction: column; } nav { width: 100%; } .nav-link { padding: 16px 0 12px; } .metric-card { min-height: 104px; padding: 18px; } .metric-card strong { font-size: 34px; } .field-row { grid-template-columns: 1fr; gap: 0; } .product-form, .candidate-card { padding: 20px; } }

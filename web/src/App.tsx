@@ -93,7 +93,7 @@ function ProductCard({ product, sources }: { product: ProductSnapshot; sources: 
         <h3>{product.name}</h3>
         <span>{product.capacity}{product.variant ? ` · ${product.variant}` : ''}</span>
         {product.bestPurchase && <a className="best-buy-button" href={product.bestPurchase.url} target="_blank" rel="noreferrer"><span>현재 최저가 구매</span><strong>{unitMoney(product.bestPurchase.unitPrice, product.bestPurchase.quantityUnit)}</strong><small>{bestSource?.label ?? product.bestPurchase.sourceId} · {product.bestPurchase.basis === 'observation' ? product.bestPurchase.isFresh ? '최신 검증' : '마지막 검증값' : '기존 확인 후보'} ↗</small></a>}
-        <a className="text-link" href={`#/product/${product.id}`}>가격 이력 보기 <span aria-hidden="true">→</span></a>
+        <a className="text-link" href={`#/product/${product.id}`}>가격 변동 차트 보기 <span aria-hidden="true">→</span></a>
       </div>
       <div className="market-grid">{sources.map((source) => <MarketPrice key={source.id} product={product} source={source} />)}</div>
       <div className="difference"><span>단위가 차이</span><strong>{difference == null ? '—' : unitMoney(difference, product.comparisonUnit)}</strong></div>
@@ -122,37 +122,64 @@ function Dashboard({ snapshot }: { snapshot: PublicSnapshot }) {
 }
 
 function PriceChart({ product, sources }: { product: ProductSnapshot; sources: Source[] }) {
-  const points = product.history.filter((item) => item.unitPrice !== null && item.quantityUnit === product.comparisonUnit).sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
-  if (!points.length) return <div className="chart-empty">아직 비교 가능한 가격 이력이 없습니다.</div>;
+  const points = product.history.filter((item) => item.comparable && item.stockStatus === 'in_stock' && item.unitPrice !== null && item.quantityUnit === product.comparisonUnit).sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
+  if (!points.length) return <div className="chart-empty"><div><strong>가격 변동을 기록할 준비가 됐어요.</strong><p>리뷰 에이전트를 통과한 실제 가격이 수집되면 판매처별 선과 최저점이 표시됩니다.</p></div></div>;
+
+  const width = 920;
+  const height = 340;
+  const margin = { top: 24, right: 22, bottom: 54, left: 78 };
   const times = [...new Set(points.map((point) => Date.parse(point.capturedAt)))].sort((a, b) => a - b);
   const values = points.map((point) => point.unitPrice as number);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const x = (time: number) => times.length === 1 ? 50 : 6 + ((time - times[0]) / (times.at(-1)! - times[0])) * 88;
-  const y = (value: number) => max === min ? 50 : 88 - ((value - min) / (max - min)) * 72;
+  const rawMin = Math.min(...values);
+  const rawMax = Math.max(...values);
+  const rawRange = rawMax - rawMin || Math.max(rawMax * 0.08, 1);
+  const chartMin = Math.max(0, rawMin - rawRange * 0.14);
+  const chartMax = rawMax + rawRange * 0.14;
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const x = (time: number) => times.length === 1 ? margin.left + plotWidth / 2 : margin.left + ((time - times[0]) / (times.at(-1)! - times[0])) * plotWidth;
+  const y = (value: number) => margin.top + ((chartMax - value) / (chartMax - chartMin)) * plotHeight;
+  const yTicks = Array.from({ length: 5 }, (_, index) => chartMax - ((chartMax - chartMin) / 4) * index);
+  const xTicks = [...new Set([times[0], times[Math.floor((times.length - 1) / 2)], times.at(-1)!])];
+  const chartDate = (time: number) => new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', timeZone: 'Asia/Seoul' }).format(new Date(time));
+  const pointDate = (value: string) => new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Seoul' }).format(new Date(value));
+  const series = sources.map((source) => ({ source, points: points.filter((point) => point.sourceId === source.id) })).filter((item) => item.points.length);
   return (
     <div className="chart-wrap">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label={`${product.name} 가격 이력 그래프`}>
-        {[20, 50, 80].map((line) => <line key={line} x1="3" x2="97" y1={line} y2={line} className="grid-line" />)}
-        {sources.map((source) => {
-          const series = points.filter((point) => point.sourceId === source.id);
-          if (!series.length) return null;
-          const path = series.map((point, index) => `${index ? 'L' : 'M'} ${x(Date.parse(point.capturedAt))} ${y(point.unitPrice as number)}`).join(' ');
-          return <g key={source.id}><path d={path} fill="none" stroke={source.accent} strokeWidth="1.3" vectorEffect="non-scaling-stroke" />{series.map((point) => <circle key={point.id} cx={x(Date.parse(point.capturedAt))} cy={y(point.unitPrice as number)} r="1.8" fill={source.accent} vectorEffect="non-scaling-stroke" />)}</g>;
-        })}
-      </svg>
-      <div className="chart-legend">{sources.map((source) => <span key={source.id}><i style={{ background: source.accent }} />{source.label}</span>)}</div>
+      <div className="trend-summary">{series.map(({ source, points: sourcePoints }) => {
+        const first = sourcePoints[0].unitPrice as number;
+        const latest = sourcePoints.at(-1)!.unitPrice as number;
+        const change = latest - first;
+        const direction = change > 0.005 ? 'rise' : change < -0.005 ? 'fall' : 'flat';
+        return <article className="trend-card" key={source.id}><span><i style={{ background: source.accent }} />{source.label}</span><strong>{unitMoney(latest, product.comparisonUnit)}</strong><small className={direction}>{sourcePoints.length === 1 ? '첫 관측' : `${change > 0 ? '▲' : change < 0 ? '▼' : '—'} ${unitMoney(Math.abs(change), product.comparisonUnit)}`} · 최저 {unitMoney(Math.min(...sourcePoints.map((point) => point.unitPrice as number)), product.comparisonUnit)}</small></article>;
+      })}</div>
+      <div className="chart-canvas">
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`chart-title-${product.id} chart-desc-${product.id}`}>
+          <title id={`chart-title-${product.id}`}>{product.name} 판매처별 단위 가격 변동</title>
+          <desc id={`chart-desc-${product.id}`}>{points.length}개의 실제 관측값을 시간 순서대로 연결한 원/{product.comparisonUnit} 선 그래프입니다.</desc>
+          {yTicks.map((tick) => <g key={tick}><line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} className="grid-line" /><text x={margin.left - 13} y={y(tick) + 4} textAnchor="end" className="chart-axis-label">{new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 }).format(tick)}</text></g>)}
+          {xTicks.map((time) => <text key={time} x={x(time)} y={height - 16} textAnchor={time === times[0] ? 'start' : time === times.at(-1) ? 'end' : 'middle'} className="chart-axis-label">{chartDate(time)}</text>)}
+          <text x={14} y={17} className="chart-unit-label">원/{product.comparisonUnit}</text>
+          {series.map(({ source, points: sourcePoints }) => {
+            const path = sourcePoints.map((point, index) => `${index ? 'L' : 'M'} ${x(Date.parse(point.capturedAt))} ${y(point.unitPrice as number)}`).join(' ');
+            return <g key={source.id}><path d={path} fill="none" stroke={source.accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />{sourcePoints.map((point) => <circle key={point.id} cx={x(Date.parse(point.capturedAt))} cy={y(point.unitPrice as number)} r="4.5" fill="#f6f3ec" stroke={source.accent} strokeWidth="3"><title>{source.label} · {unitMoney(point.unitPrice, product.comparisonUnit)} · {pointDate(point.capturedAt)}</title></circle>)}</g>;
+          })}
+        </svg>
+      </div>
+      <div className="chart-legend">{series.map(({ source }) => <span key={source.id}><i style={{ background: source.accent }} />{source.label}</span>)}</div>
+      <p className="chart-note">각 점은 로그인 없이 확인한 상품가와 필수 배송비를 총용량으로 나눈 실제 관측값입니다.</p>
     </div>
   );
 }
 
 function ProductDetail({ product, sources }: { product: ProductSnapshot; sources: Source[] }) {
+  const chartPointCount = product.history.filter((item) => item.comparable && item.stockStatus === 'in_stock' && item.unitPrice !== null && item.quantityUnit === product.comparisonUnit).length;
   return (
     <main className="detail-page">
       <a className="back-link" href="#/">← 가격 보드</a>
       <section className="detail-heading"><p className="eyebrow">{product.brand}</p><h1>{product.name}</h1><p>{product.capacity}{product.variant ? ` · ${product.variant}` : ''}</p></section>
       <section className="detail-prices">{sources.map((source) => <MarketPrice key={source.id} product={product} source={source} />)}</section>
-      <section className="history-panel"><div className="board-heading"><div><p className="eyebrow">UNIT PRICE HISTORY</p><h2>단위 가격 이력</h2></div><span>{product.history.length}개 실제 관측값 · 원/{product.comparisonUnit}</span></div><PriceChart product={product} sources={sources} /></section>
+      <section className="history-panel"><div className="board-heading"><div><p className="eyebrow">UNIT PRICE HISTORY</p><h2>가격 변동 차트</h2></div><span>{chartPointCount}개 비교 가능 관측값 · 원/{product.comparisonUnit}</span></div><PriceChart product={product} sources={sources} /></section>
     </main>
   );
 }
